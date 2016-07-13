@@ -1,0 +1,25 @@
+{
+  "name": "Cartlab-Backend",
+  "version": "0.0.1",
+  "description": "Backend to UW Cartography Lab Website",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "body-parser": "~1.0.1",
+    "express": "latest",
+    "forever": "^0.15.2",
+    "httpdispatcher": "latest",
+    "pg": "latest",
+    "formidable":"latest",
+    "fileupload":"latest",
+    "fs":"latest",
+    "pg-promise":"latest",
+    "bluebird" : "latest",
+    "request" : "latest",
+    "xml2js":"latest"
+  },
+  "author": "Scott Farley",
+  "license": "MIT"
+}

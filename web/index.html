@@ -2,14 +2,21 @@
 
 <head>
   <title>CartLab File Uploader</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
 </head>
 <body>
   <h1>xCartLabDB File Uploading (beta)</h1>
     <label>Resource ID:</label><input type='text' id='resourceID' name='resourceID' placeholder='Roth_2009_CaGIS'/><br />
     <label>Resource Full Name</label><input type='text' id='resourceName' name='resourceName' placeholder="'A qualitative approach to...'"/><br />
-    <label>Author First</label><input type='text' id='authorFirst' name='authorFirst' placeholder='Robert' /><br / />
-    <label>Author Middle</label><input type='text' id='authorMiddle' name='authorMiddle' placeholder="E." /><br />
-    <label>Author Last</label><input type='text' id='authorLast' name='authorLast' placeholder="Roth" /><br />
+    <div id='authors'>
+
+    <label>First Author: </label><input type='text' id='authorFirst' class='authorFirst' placeholder='Robert' />
+    <input type='text' id='authorMiddle' class='authorMiddle' placeholder="E." />
+    <input type='text' id='authorLast' class='authorLast' placeholder="Roth" />
+    <button id='addAuthor'><span class='glyphicon glyphicon-plus'</button><button id='removeAuthor'><span class='glyphicon glyphicon-minus'</button>
+    </div>
+    <br />
     <label>Resource Creation Date</label><input type='date' id='resourceDate' name='resourceDate' placeholder="1/1/2015" /><br />
     <label>Resource Category</label><select id='resourceCategory'>
       <option>project</option>
@@ -30,7 +37,7 @@
   <input id='fileUpload' type='file' />
   <br / />
   <button id='submit'>Submit Form</button>
-  <script   src="https://code.jquery.com/jquery-3.1.0.js"   integrity="sha256-slogkvB1K3VOkzAI8QITxV3VzpOnkeNVsKvtkYLMjfk="   crossorigin="anonymous"></script>
+<script   src="https://code.jquery.com/jquery-2.2.4.js"   integrity="sha256-iT6Q9iMJYuQiMWNd9lDyBUStIq/8PuOW33aOqmvFpqI="   crossorigin="anonymous"></script><script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
   <script>
   globals = {}
   globals.hosts = {
@@ -39,21 +46,53 @@
     post : "http://localhost:8080/upload",
     mediaTypes : "http://localhost:8080/mediatypes"
   }
+  globals.authorCount = 1;
   $(document).ready(function(){
     getAllowedMediaTypes(); // gets the list of media types
     getCategories(true); // gets the categories list and populates the dropdown
+    //actions
     $("#submit").click(function(){
       submit()
     })
+    $("#addAuthor").click(function(){
+      //add another set of author fields
+      globals.authorCount += 1
+      html = "<div id='authorRow" + globals.authorCount + "''<label>Author " + globals.authorCount + ": </label><input type='text' id='authorFirst" + globals.authorCount + "' class='authorFirst' placeholder='Robert' /><input type='text' id='authorMiddle" + globals.authorCount + "' class='authorMiddle' placeholder='E.'' /> <input type='text' id='authorLast" + globals.authorCount + "' class='authorLast' placeholder='Roth' />"
+      $("#authors").append(html)
+    })
+    $("#removeAuthor").click(function(){
+      tag = "#authorRow" + globals.authorCount
+      $(tag).remove()
+      globals.authorCount -= 1
+    })
   })
+
+
 
   function submit(){
     //get the form values
     var resourceID = $("#resourceID").val()
     var resourceName = $("#resourceName").val()
-    var authorFirst = $("#authorFirst").val()
-    var authorLast = $("#authorLast").val()
-    var authorMiddle = $("#authorMiddle").val()
+    //get the first author, (required)
+    var firstAuthor = {
+      'first' : $("#authorFirst").val(),
+      'middle' : $("#authorMiddle").val(),
+      'last' : $("#authorLast").val()
+    }
+    authors = [firstAuthor]
+    //deal with multiple authors
+    for (var i=2; i <= globals.authorCount; i++){
+      firstTag = "#authorFirst" + i
+      middleTag = "#authorMiddle" + i
+      lastTag = "#authorLast" + i
+      author = {
+        'first' : $(firstTag).val(),
+        'middle' : $(middleTag).val(),
+        'last' : $(lastTag).val()
+      }
+      authors.push(author)
+    }
+    console.log(authors)
     var resourceCreationDate = $("#resourceCreationDate").val()
     var resourceCategory = $("#resourceCategory option:selected").text()
     var tags = $("#tags").val()
@@ -68,18 +107,7 @@
     var metadata = {
       resourceID: resourceID,
       resourceName: resourceName,
-      authors: [
-        {
-          first: authorFirst,
-          middle: authorMiddle,
-          last: authorLast
-        },
-        {
-          first: authorFirst,
-          middle: authorMiddle,
-          last: authorLast
-        }
-      ],
+      authors: authors,
       creationDate: resourceCreationDate,
       resourceCategory: resourceCategory,
       tags: tagList,
@@ -95,6 +123,7 @@
       resourceFilename: resourceFilename,
 
     }
+    console.log(metadata)
     var metastring = JSON.stringify(metadata)
     //deal with the file upload
     var files = $("#fileUpload").get(0).files;

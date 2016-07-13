@@ -109,9 +109,10 @@ app.post('/upload', function(req, res){
               sql = ""
               vals = []
               console.log(tags)
-              if ((tags.length == 0) || (tags[0] == "") ){
+              if ((tags.length == 0) || (tags[0] == "") || (tags == [ '' ]) ){
                 //skip this part
-                insertReference(db, references);
+                console.log("tags")
+                insertReference(db, references, resourceID);
               }else{
                   for (var i=0; i<tags.length; i++){
                       j = i * 2 + 1
@@ -124,7 +125,7 @@ app.post('/upload', function(req, res){
                     .then(function(){
                       console.log("Inserted tags, now doing reference.")
                       console.log("Success!")
-                      insertReference(db, references)
+                      insertReference(db, references, resourceID)
                     })
                     .catch(function(err){
                       console.log("Error entering tag information.")
@@ -157,9 +158,15 @@ app.post('/upload', function(req, res){
 
 function insertReference(db, references, resourceID){
   //get the deconstructed reference from FreeCite
+  console.log("Doing reference.")
+  console.log(references)
   for (var i =0; i< references.length; i++){
     reference = references[i]
-    getCitation(reference, resourceID, db)
+    if (reference != ""){
+      getCitation(reference, resourceID, db)
+    }else{
+      console.log("No reference")
+    }
   }
 
 }

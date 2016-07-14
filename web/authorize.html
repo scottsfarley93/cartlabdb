@@ -27,6 +27,7 @@ html, body{
     </header>
     <div id='main' class='container'>
     <h1 class='page-header'>CartLabDB Resource Authorization</h1>
+    <h4 style="{color: orange}">Remaining: <span class='text-muted' id='remaining'></span></h4>
     <div class='col-xs-4'>
       <button class='btn-large btn btn-success' id='approveButton'><span class='glyphicon glyphicon-check'></span>Approve</button>
       <button class='btn-large btn btn-danger' id='rejectButton'><span class='glyphicon glyphicon-remove'></span>Reject</button>
@@ -67,7 +68,8 @@ html, body{
       random: "http://localhost:8080/unauthorizedResource",
       filePrefix: "http://localhost:8080/",
       approve: "http://localhost:8080/approve",
-      reject: "http://localhost:8080/reject"
+      reject: "http://localhost:8080/reject",
+      stats: "http://localhost:8080/resourceStatistics"
     }
     globals.currentResourceID = null;
     $(document).ready(function(){
@@ -75,12 +77,13 @@ html, body{
       getNewResource(true)
       $("#approveButton").click(function(){
         console.log("Approving.")
-        approveResource()
+        approveResource(true)
       })
       $("#rejectButton").click(function(){
         console.log("Rejecting.")
-        rejectResource();
+        rejectResource(true);
       })
+      getNumEmbargo(true) // get the number of embargoed files left to approve
     })
 
     function getNewResource(populate){
@@ -182,9 +185,12 @@ html, body{
       //approve the resource in the database
       //if the getNext property is set, advance to the next resource
       url = globals.hosts.approve + "/" + globals.currentResourceID
-      $.getJSON(url, function(){
+      $.getJSON(url, function(data){
         alert("Resource has been approved.")
         if (getNext){
+          console.log("Getting next resource.")
+          getNumEmbargo(true)
+          clearForm()
           getNewResource(true)
         }
       })
@@ -197,18 +203,35 @@ html, body{
       $.getJSON(url, function(){
         alert("Resource has been rejected.")
         if (getNext){
+          getNumEmbargo(true)
+          clearForm()
           getNewResource(true)
         }
       })
     }
 
     function formatBytes(bytes,decimals) {
+      //format file sizes
        if(bytes == 0) return '0 Byte';
        var k = 1000; // or 1024 for binary
        var dm = decimals + 1 || 3;
        var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
        var i = Math.floor(Math.log(bytes) / Math.log(k));
        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    }
+
+    function getNumEmbargo(show){
+      //get the number of embargoed files left to approve
+      $.getJSON(globals.hosts.stats, function(data){
+        if (data['success']){
+          globals.remaining = data['data']['embargoed']
+          if(show){
+            $("#remaining").text(globals.remaining)
+          }
+        }else{
+          console.log(data['error'])
+        }
+      })
     }
     </script>
   </body>

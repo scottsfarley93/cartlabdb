@@ -26,12 +26,14 @@ CREATE TABLE AuthUsers (
 	UserLast text,
 	UserEmail text,
 	AdminPassword text,
+	Approved boolean,
 	Modified timestamp default current_timestamp
 );
 
 CREATE TABLE AuthActions(
 	ActionID serial primary key,
 	resourceID integer,
+	resourceType text,
 	userID integer,
 	approved boolean,
 	modified timestamp default current_timestamp

@@ -8,6 +8,11 @@ var pg = require('pg');
 var util = require('util');
 var fs = require('fs');
 var promise = require('bluebird');
+var bcrypt = require('bcrypt');
+
+const saltRounds = 10;
+
+
 var pgp = require('pg-promise')(
   {promiseLib: promise}
 );
@@ -359,7 +364,7 @@ app.get("/approve/:id", function(req, res){
   db.none(sql, values)
     .then(function(){
       //insert into the authorized users action table, so we can keep track of rejections and approvals
-      sql = "INSERT INTO AuthActions VALUES (DEFAULT, $1, (SELECT UserID from authusers where lower(useremail)=lower($2)), TRUE, default);"
+      sql = "INSERT INTO AuthActions VALUES (DEFAULT, $1, 'Resource', (SELECT UserID from authusers where lower(useremail)=lower($2)), TRUE, default);"
       db.none(sql, values)
         .then(function(){
           res.json({success: true, data:[]})
@@ -382,7 +387,7 @@ app.get("/reject/:id", function(req, res){
   db.none(sql, values)
     .then(function(){
       //insert into the authorized users action table, so we can keep track of rejections and approvals
-      sql = "INSERT INTO AuthActions VALUES (DEFAULT, $1, (SELECT UserID from authusers where lower(useremail)=lower($2)), FALSE, default);"
+      sql = "INSERT INTO AuthActions VALUES (DEFAULT, $1, 'Resource', (SELECT UserID from authusers where lower(useremail)=lower($2)), FALSE, default);"
       db.none(sql, [thisResource, session_email])
         .then(function(){
           res.json({success: true, data:[]})
@@ -396,6 +401,131 @@ app.get("/reject/:id", function(req, res){
     })
 })
 
+
+app.get("/resourceStatistics", function(req, res){
+  sql = "SELECT count(*) FROM resources where embargostatus = TRUE;"
+  db = createConnection()
+  db.one(sql)
+    .then(function(data){
+      res.json({success: true, data: {embargoed: data['count']}})
+    }).catch(function(err){
+      res.json({success: false, error: err, location: "Embargo stats."})
+    })
+})
+
+app.post("/signup", function(req, res){
+  //adds a new authorized user to the database
+  //collect the POSTed data
+  var userFirst = req.body.firstName;
+  var userLast = req.body.lastName;
+  var userEmail = req.body.email;
+  var userPass = req.body.p;
+  bcrypt.hash(myPlaintextPassword, saltRounds, function(err, hash) {
+    db = createConnection()
+    //check to see if the user email already exists
+    sql = "SELECT count(*) FROM authusers where useremail = $1";
+    db.one(sql, [userEmail])
+      .then(function(data){
+        count = data['count']
+        if (count > 0){
+          //user already exists
+          res.json({success: false, error: "User with that email already exists."})
+        }else{
+          sql = "INSERT INTO authusers VALUES(default, $1, $2, $3, $4, FALSE, default)"
+          values = [userFirst, userLast, userEmail, hash]
+          db.none(sql, values)
+            .then(function(){
+              res.json({success: true, data:[]})
+            })
+            .catch(function(err){
+              res.json({success: false, error:err, location: "User insert."})
+            })
+        }
+      }).catch(function(err){
+        res.json({success: false, error: err, location: "User existance check."})
+      })
+  });
+})
+
+app.get("/unapprovedUsers", function(req, res){
+  // list all of the users who have not yet been approved by an existing authorized user
+  db = createConnection()
+  sql = "SELECT * FROM authusers where approved = FALSE;"
+  db.any(sql)
+    .then(function(data){
+      res.json({success: true, data: data})
+    })
+    .catch(err){
+      res.json({success:false, error: err, location: "Authorized User Selection."})
+    }
+})
+
+app.get("/approveUser/:userID", function(req, res){
+  //approve a user, giving them the ability to approve documents
+  //need a session token here...TODO
+  userID = req.params.userID
+  db = createConnection()
+  sql = "UPDATE authusers set approved = TRUE, modified = current_timestamp where userid = $1";
+  db.none(sql, [userID])
+    .then(function(){
+      //tie this action to an existing user
+      sql = "INSERT INTO AuthActions VALUES (DEFAULT, $1, 'User', (SELECT UserID from authusers where lower(useremail)=lower($2)), TRUE, default);"
+      values = [userID, session_email]
+      db.none(sql, values)
+        .then(function(){
+          res.json({success: true, data: []})
+        })
+        .catch(function(err){
+          res.json({success: false, error: err, location: "Authorized action insert."})
+        })
+    })
+    .catch(function(err){
+      res.json({success: false, errror:err, location: "Authorized user update."})
+    })
+})
+
+app.get("/removeUser/:ID", function(req, res){
+  //permanently remove a user (approved or unapproved)
+  //add session token
+  userID = req.params.userID
+  db = createConnection()
+  sql = "DELETE FROM authusers where userid = $1";
+  db.none(sql, [userID])
+    .then(function(){
+      //tie this action to an existing user
+      sql = "INSERT INTO AuthActions VALUES (DEFAULT, $1, 'User', (SELECT UserID from authusers where lower(useremail)=lower($2)), TRUE, default);"
+      values = [userID, session_email]
+      db.none(sql, values)
+        .then(function(){
+          res.json({success: true, data: []})
+        })
+        .catch(function(err){
+          res.json({success: false, error: err, location: "Authorized action insert."})
+        })
+    })
+    .catch(function(err){
+      res.json({success: false, errror:err, location: "Authorized user removal."})
+    })
+})
+
+app.post("/login", function(req, res){
+  var email = req.body.email;
+  var password = req.body.p
+  db = createConnection()
+  //get the password from the database
+  sql = "SELECT * FROM authusers where lower(useremail) = lower($1) LIMIT 1;"
+  values = [email]
+  db.any(sql, values)
+    .then(function(data){
+      if (data.length == 0){
+        //no results were returned
+        //the user doesn't exist
+        res.json({success: false, error: "User does not exist."})
+    })
+  bcrypt.compare("bacon", hash, function(err, res) {
+    // res == true
+});
+})
 
 app.get("/", function(req, res){
   db = createConnection();

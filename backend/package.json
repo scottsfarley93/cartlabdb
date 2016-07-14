@@ -9,16 +9,16 @@
   "dependencies": {
     "body-parser": "~1.0.1",
     "express": "latest",
-    "forever": "^0.15.2",
     "httpdispatcher": "latest",
     "pg": "latest",
     "formidable":"latest",
-    "fileupload":"latest",
     "fs":"latest",
     "pg-promise":"latest",
     "bluebird" : "latest",
     "request" : "latest",
-    "xml2js":"latest"
+    "xml2js":"latest",
+    "express-session" : "^1.7.6",
+    "bcrypt":"latest"
   },
   "author": "Scott Farley",
   "license": "MIT"

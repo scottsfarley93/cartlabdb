@@ -6,19 +6,20 @@
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
 </head>
 <body>
-  <h1>xCartLabDB File Uploading (beta)</h1>
-    <label>Resource ID:</label><input type='text' id='resourceID' name='resourceID' placeholder='Roth_2009_CaGIS'/><br />
-    <label>Resource Full Name</label><input type='text' id='resourceName' name='resourceName' placeholder="'A qualitative approach to...'"/><br />
+  <div id='main' class='container'>
+  <h1 class='page-header'>xCartLabDB File Uploading (beta)</h1>
+    <label>Resource ID String</label><input type='text' id='resourceID' name='resourceID' class='form-control' placeholder='Roth_2009_CaGIS'/><br />
+    <label>Resource Full Name</label><input type='text' id='resourceName' name='resourceName' class='form-control' placeholder="'A qualitative approach to...'"/><br />
     <div id='authors'>
 
-    <label>First Author: </label><input type='text' id='authorFirst' class='authorFirst' placeholder='Robert' />
-    <input type='text' id='authorMiddle' class='authorMiddle' placeholder="E." />
-    <input type='text' id='authorLast' class='authorLast' placeholder="Roth" />
-    <button id='addAuthor'><span class='glyphicon glyphicon-plus'</button><button id='removeAuthor'><span class='glyphicon glyphicon-minus'</button>
+    <label>First Author: </label><input type='text' id='authorFirst' class='authorFirst form-control' placeholder='Robert' />
+    <input type='text' id='authorMiddle' class='authorMiddle form-control' placeholder="E." />
+    <input type='text' id='authorLast' class='authorLast form-control' placeholder="Roth" />
+    <button id='addAuthor' class='btn btn-success'><span class='glyphicon glyphicon-plus'</button><button id='removeAuthor' class='btn btn-alert'><span class='glyphicon glyphicon-minus'</button>
     </div>
     <br />
-    <label>Resource Creation Date</label><input type='date' id='resourceDate' name='resourceDate' placeholder="1/1/2015" /><br />
-    <label>Resource Category</label><select id='resourceCategory'>
+    <label>Resource Creation Date</label><input type='date' id='resourceCreationDate' name='resourceDate' class='form-control' val="1/1/2016" /><br />
+    <label>Resource Category</label><select id='resourceCategory' class='form-control'>
       <option>project</option>
       <option>ed</option>
       <option>ed/370</option>
@@ -26,18 +27,25 @@
       <option>research</option>
       <option>design</option>
     </select> <br / />
-    <label>Resource Description</label><input type='text' id='resourceDesc' placeholder='A really cool paper by @roberteroth.' /><br / />
-    <label>Tags (comma separated list)</label><input type="text" id='tags' name='tags' placeholder="maps, research, cool stuff" /><br / />
-    <label>Published Reference</label><input type='text' id='ref' name='ref' placeholder='Roth, Robert E., and Mark Harrower. "Addressing map interface usability: learning from the Lakeshore Nature Preserve interactive map." Cartographic Perspectives 60 (2008): 46-66.' /><br / />
+    <label>Resource Description</label><input type='text' id='resourceDesc' placeholder='A really cool paper by @roberteroth.' class='form-control' /><br / />
+    <label>Tags (comma separated list)</label><input type="text" id='tags' name='tags' placeholder="maps, research, cool stuff" class='form-control' /><br / />
+    <div id='refs'>
+      <label>Published Reference</label><input type='text' class='form-control' id='ref1' placeholder='Roth, Robert E., and Mark Harrower. "Addressing map interface usability: learning from the Lakeshore Nature Preserve interactive map." Cartographic Perspectives 60 (2008): 46-66.' />
+      <button id='addReference' class='btn btn-success'><span class='glyphicon glyphicon-plus' ></span></button>
+      <button id='removeReference' class='btn btn-alert'><span class='glyphicon glyphicon-minus' ></span></button>
+    </div>
   <br / />
-  <label>Notes:</label><input type='text' id='notes' placeholder="Notes you might have about stuff."/><br / />
-  <label>Uploader Name</label><input type='text' id='uploaderName' placeholder="Your Name" /><br / />
-  <label>Uploader Email</label><input type='text' id='uploaderEmail' placeholder='you@wisc.edu' /><br / />
+  <label>Notes:</label><input type='text' id='notes' class='form-control' placeholder="Notes you might have about stuff."/><br / />
+  <label>Uploader Name</label><input type='text' class='form-control' id='uploaderName' placeholder="Your Name" /><br / />
+  <label>Uploader Email</label><input type='text' id='uploaderEmail' class='form-control' placeholder='you@wisc.edu' /><br / />
 
   <input id='fileUpload' type='file' />
   <br / />
-  <button id='submit'>Submit Form</button>
+  <button id='submit' class='btn btn-primary btn-large'>Submit Form</button>
+</div>
 <script   src="https://code.jquery.com/jquery-2.2.4.js"   integrity="sha256-iT6Q9iMJYuQiMWNd9lDyBUStIq/8PuOW33aOqmvFpqI="   crossorigin="anonymous"></script><script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+
   <script>
   globals = {}
   globals.hosts = {
@@ -47,9 +55,11 @@
     mediaTypes : "http://localhost:8080/mediatypes"
   }
   globals.authorCount = 1;
+  globals.refCount = 1;
   $(document).ready(function(){
     getAllowedMediaTypes(); // gets the list of media types
     getCategories(true); // gets the categories list and populates the dropdown
+    setDate()
     //actions
     $("#submit").click(function(){
       submit()
@@ -57,13 +67,29 @@
     $("#addAuthor").click(function(){
       //add another set of author fields
       globals.authorCount += 1
-      html = "<div id='authorRow" + globals.authorCount + "''<label>Author " + globals.authorCount + ": </label><input type='text' id='authorFirst" + globals.authorCount + "' class='authorFirst' placeholder='Robert' /><input type='text' id='authorMiddle" + globals.authorCount + "' class='authorMiddle' placeholder='E.'' /> <input type='text' id='authorLast" + globals.authorCount + "' class='authorLast' placeholder='Roth' />"
+      html = "<div id='authorRow" + globals.authorCount + "''<label>Author " + globals.authorCount + ": </label><input type='text' id='authorFirst" + globals.authorCount + "' class='authorFirst form-control' placeholder='Robert' /><input type='text' id='authorMiddle" + globals.authorCount + "' class='authorMiddle form-control' placeholder='E.'' /> <input type='text' id='authorLast" + globals.authorCount + "' class='authorLast form-control' placeholder='Roth' />"
       $("#authors").append(html)
     })
     $("#removeAuthor").click(function(){
+      //remove the author row if there are more than one on screen
       tag = "#authorRow" + globals.authorCount
-      $(tag).remove()
-      globals.authorCount -= 1
+      if (globals.authorCount > 1){
+        $(tag).remove()
+        globals.authorCount -= 1
+      }
+    })
+    $("#addReference").click(function(){
+      //add another reference field
+      globals.refCount += 1;
+      html = "<div id='refRow" + globals.refCount + "'><label>Published Reference " + globals.refCount + "</label><input type='text' id='ref" + globals.refCount + "' class='form-control'/></div>"
+      $("#refs").append(html)
+    })
+    $("#removeReference").click(function(){
+      tag = "#refRow" + globals.refCount
+      if (globals.refCount > 1){
+        $(tag).remove()
+        globals.refCount -=1
+      }
     })
   })
 
@@ -90,10 +116,16 @@
         'middle' : $(middleTag).val(),
         'last' : $(lastTag).val()
       }
-      authors.push(author)
+      //check that there is really stuff in there
+      if ((author['first'] == "") || (author['last'] == "")){
+        console.log("Invalid author #" + i)
+      }else{
+        authors.push(author)
+      }
+
     }
-    console.log(authors)
     var resourceCreationDate = $("#resourceCreationDate").val()
+    console.log(resourceCreationDate)
     var resourceCategory = $("#resourceCategory option:selected").text()
     var tags = $("#tags").val()
     var ref = $("#ref").val()
@@ -124,7 +156,6 @@
 
     }
     console.log(metadata)
-    var metastring = JSON.stringify(metadata)
     //deal with the file upload
     var files = $("#fileUpload").get(0).files;
     //only upload if there is a file present, otherwise we'll have random metadata and no one wants that
@@ -135,6 +166,8 @@
         console.log(file.type)
         metadata['resourceMimeType'] = file.type
         metadata['resourceSize'] = file.size
+        metadata['resourceFilename'] = file.name
+        var metastring = JSON.stringify(metadata)
         // add the files to formData object for the data payload
         formData.append('uploads[]', file, file.name);
         formData.append('metadata', metastring)
@@ -146,7 +179,10 @@
         processData: false,
         contentType: false,
         success: function(data){
-            console.log('upload successful!');
+            if (data['success']){
+              console.log("Upload successful.")
+              window.href()
+            }
         },
         xhr: function() {
           // create an XMLHttpRequest
@@ -199,15 +235,27 @@
         $("#resourceCategory").empty()
         categoryData = data['data']
         for (var i = 0; i < categoryData.length; i++){
-          html = "<option>" + categoryData[i]['categorytext'] + "</option>"
+          html = "<option value='" +categoryData[i]['categorytext'] + "'>" + categoryData[i]['categorytext'] + "</option>"
           $("#resourceCategory").append(html)
         }
       }
     })
   }
 
+  function setDate(){
+    var now = new Date();
+
+    var day = ("0" + now.getDate()).slice(-2);
+    var month = ("0" + (now.getMonth() + 1)).slice(-2);
+
+    var today = now.getFullYear()+"-"+(month)+"-"+(day) ;
+
+    $('#resourceCreationDate').val(today);
+  }
+
   function validateForm(){
     //validate against rules, returns TRUE if we can upload the data and false if the form data is not allowed
+    //rule 1: resourceID can have no spaces or special characters other than (- or _) and alphanumeric
 
   }
   </script>

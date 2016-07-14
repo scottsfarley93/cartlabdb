@@ -15,8 +15,10 @@ var request = require('request');
 var parser = require('xml2js').parseString;
 //var fileupload = require('fileupload').createFileUpload('/uploadDir').middleware
 
-var app = express()
+session_email = 'sfarley2@wisc.edu'
 
+var app = express()
+app.use(express.static(__dirname + '/public'));
 var bodyParser = require('body-parser');
 
 function createConnection(){
@@ -45,6 +47,8 @@ app.use(function(req, res, next) {
   next();
 });
 
+
+
 var router = express.Router();
 
 hostname = 'localhost'
@@ -64,7 +68,7 @@ app.post('/upload', function(req, res){
   // specify that we want to allow the user to upload multiple files in a single request
   form.multiples = true;
   // store all uploads in the /uploads directory
-  form.uploadDir = path.join(__dirname, '/uploads');
+  form.uploadDir = path.join(__dirname, '/public/uploads');
   // store and name the file
   form.on('file', function(field, file) {
     fs.rename(file.path, path.join(form.uploadDir, file.name));
@@ -76,7 +80,7 @@ app.post('/upload', function(req, res){
       //create the resource first
       resourceName = metadata['resourceName']
       resourceID = metadata['resourceID']
-      resourceDate = metadata['resourceDate']
+      resourceDate = metadata['creationDate']
       resourceCategory = metadata['resourceCategory']
       resourceDescription = metadata['resourceDescription']
       notes = metadata['notes']
@@ -88,10 +92,13 @@ app.post('/upload', function(req, res){
       references = metadata['references']
       uploaderName = metadata['uploader']['name']
       uploaderEmail = metadata['uploader']['email']
+      console.log(metadata)
+      vals = [resourceID, resourceName, resourceDate, resourceCategory.toLowerCase(), resourceDescription, notes, true, null, resourceFilename,  resourceFileType, resourceSize, uploaderName, uploaderEmail]
       //get the category for this
-      db.one("INSERT INTO Resources Values(default, $1, $2, $3, (select categoryid from categories where lower(categorytext) = $11), $4, $5, $6, $7, $8, $9, $10, $11, $12, default) returning resourceid;",
-      [resourceID, resourceName, resourceDate, resourceDescription, notes, true, null, resourceFilename, resourceFileType, resourceSize, resourceCategory.toLowerCase(), uploaderName, uploaderEmail])
-        .then(function(data){
+
+                                          //databaseID/resourceID/resourceName/resourceDate/category/                     description/notes/embargo/auth/path/type/size/name/email/modified
+      db.one("INSERT INTO Resources Values(default, $1, $2, $3, (select categoryid from categories where lower(categorytext) = $4), $5, $6, $7, $8, $9, (select mediaTypeID from MediaTypes where lower(mimetype) = $10), $11, $12, $13, FALSE, default) returning resourceid;", vals)
+      .then(function(data){
           //now add authorships
           var rowid = data['resourceid']
           console.log("Inserted resource.  ID is " + rowid)
@@ -148,6 +155,7 @@ app.post('/upload', function(req, res){
   });
   form.on('end', function(fields) {
     //produce response for client
+    res.json({success: true, data: []})
   });
   // parse the incoming request containing the form data
   form.parse(req, function(err, fields, files){
@@ -162,7 +170,7 @@ function insertReference(db, references, resourceID){
   console.log(references)
   for (var i =0; i< references.length; i++){
     reference = references[i]
-    if (reference != ""){
+    if ((reference != "") && (reference  != null)){
       getCitation(reference, resourceID, db)
     }else{
       console.log("No reference")
@@ -264,7 +272,7 @@ app.get("/mediaTypes", function(req, res){
     res.status(200).json({success: true, data:data});
   })
   .catch(function(err){
-    res.status(500).json({success: false})
+    res.status(500).json({success: false, error: err})
   })
 })
 
@@ -275,7 +283,116 @@ app.get("/categories", function(req, res){
       res.status(200).json({success: true, data:data});
     })
     .catch(function(err){
-      res.status(500).json({success: false})
+      res.status(500).json({success: false, error: err})
+    })
+})
+
+app.get("/unauthorizedResource", function(req, res){
+  db = createConnection();
+  //first choose the resource
+  sql = "SELECT * From Resources "
+  sql += " INNER JOIN Categories on Resources.ResourceCategory = Categories.CategoryID  "
+  sql += " INNER JOIN MediaTypes on Resources.ObjectType = MediaTypes.MediaTypeID "
+  sql += "  WHERE EmbargoStatus = TRUE AND Rejected = FALSE "
+  sql += " ORDER BY resourceID DESC LIMIT 1;"
+  console.log(sql)
+  db.oneOrNone(sql)
+    .then(function(resourceData){
+      //get the ResourceID
+      response = resourceData
+      if (response  == null){
+        res.status(200).json({success: true, data: []})
+      }else{
+        resourceID = resourceData['resourceid']
+        //now get the associated tags
+        sql = "SELECT tagid, tagtext FROM Tags WHERE ResourceID = $1;"
+        db.any(sql, [resourceID])
+          .then(function(tags){
+            //make a nice list instead of the object
+            tagList = []
+            for (var i= 0; i< tags.length; i ++){
+              tagList.push(tags[i]['tagtext'])
+            }
+            response['tags'] = tagList
+            //now get the authors
+            //same resourceID
+            sql = "SELECT authorshipid, authorfirst, authormiddle, authorlast FROM Authorship where ResourceID = $1;"
+            db.any(sql, [resourceID])
+              .then(function(authors){
+                response['authors'] = authors
+                //finally, get the references, and then return
+                sql = "SELECT referenceid, rawRef from objectreferences where resourceID = $1;"
+                db.any(sql, [resourceID])
+                  .then(function(references){
+                    response['references'] = references
+                    res.status(200).json({success: true, data:response})
+                  }).catch(function(err){
+                    //catch errors from reference call
+                    res.status(500).json({success:false, error:err, location: "References"})
+                  })
+              }).catch(function(err){
+                //catch errors from authors call
+                res.status(500).json({success: false, error: err, location: "Authors"})
+              })
+          })
+          .catch(function(err){
+            //catch errors from tags call
+            res.status(500).json({success: false, error: err, location: "Tags"})
+          })
+      }
+    })
+    .catch(function(err){
+      //catch errors from resources call
+      res.status(500).json({success: false, error: err, location: "Resources"})
+    })
+})
+
+
+app.get("/approve/:id", function(req, res){
+  //approve this resource and release the EmbargoStatus
+  //attach the authorization to an authorized user
+  thisResource = req.params.id
+  db = createConnection()
+  sql = "UPDATE Resources SET EmbargoStatus=FALSE, embargoauth=(SELECT UserID from authusers where lower(useremail)=lower($1)), modified=current_timestamp WHERE resourceid=$2;"
+  values = [session_email, thisResource]
+  console.log(values)
+  db.none(sql, values)
+    .then(function(){
+      //insert into the authorized users action table, so we can keep track of rejections and approvals
+      sql = "INSERT INTO AuthActions VALUES (DEFAULT, $1, (SELECT UserID from authusers where lower(useremail)=lower($2)), TRUE, default);"
+      db.none(sql, values)
+        .then(function(){
+          res.json({success: true, data:[]})
+        })
+        .catch(function(err){
+          res.json({success: false, error: err, location: "AuthActions"})
+        })
+    })
+    .catch(function(err){
+      res.json({success:false, error: err, location:"Embargo release"})
+    })
+})
+
+app.get("/reject/:id", function(req, res){
+  //reject an upload
+  thisResource = req.params.id
+  db = createConnection()
+  sql = "UPDATE Resources SET Rejected=TRUE, modified=current_timestamp WHERE resourceid=$1;"
+  values = [thisResource]
+  db.none(sql, values)
+    .then(function(){
+      //insert into the authorized users action table, so we can keep track of rejections and approvals
+      sql = "INSERT INTO AuthActions VALUES (DEFAULT, $1, (SELECT UserID from authusers where lower(useremail)=lower($2)), FALSE, default);"
+      db.none(sql, [thisResource, session_email])
+        .then(function(){
+          res.json({success: true, data:[]})
+        })
+        .catch(function(err){
+          res.json({success: false, error: err, location: "AuthActions"})
+        })
+    })
+    .catch(function(err){
+      res.json({success:false, error: err, location:"Rejection"})
     })
 })
 

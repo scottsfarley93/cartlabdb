@@ -15,6 +15,10 @@ DROP TABLE IF EXISTS Categories cascade;
 DROP TABLE IF EXISTS AuthUser cascade;
 DROP Table IF EXISTS AuthUsers cascade;
 DROP TABLE IF EXISTS ObjectTypes cascade;
+DROP TABLE IF EXISTS MediaTypes cascade;
+DROP TABLE IF Exists Sessions cascade;
+DROP TABLE IF EXISTS CallLog cascade;
+DROP TABLE IF EXISTS AuthActions cascade;
 
 CREATE TABLE AuthUsers (
 	UserID serial primary key,
@@ -25,7 +29,26 @@ CREATE TABLE AuthUsers (
 	Modified timestamp default current_timestamp
 );
 
+CREATE TABLE AuthActions(
+	ActionID serial primary key,
+	resourceID integer,
+	userID integer,
+	approved boolean,
+	modified timestamp default current_timestamp
+);
 
+CREATE TABLE callLog (
+	CallID serial primary key,
+	ResourceEndpoint text,
+	Method text,
+	RemoteIP text,
+	QueryParameters text,
+	UserAgent text,
+	ResponseCode integer,
+	ResponseSize integer,
+	CallTime timestamp default current_timestamp
+);
+	
 
 CREATE TABLE Authorship(
 	AuthorshipID serial primary key,
@@ -51,6 +74,7 @@ CREATE TABLE Resources(
 	ObjectSize bigint,
 	UploaderName text,
 	UploaderEmail text,
+	Rejected boolean default FALSE,
 	Modified timestamp default current_timestamp
 );
 
@@ -85,16 +109,8 @@ CREATE TABLE ObjectReferences(
 	Modified timestamp default current_timestamp
 );
 
-CREATE TABLE ObjectTypes(
-	ObjectTypeID serial primary key,
-	Description  text,
-	MIMEType text,
-	Modified timestamp default current_timestamp
-);
-
-
 CREATE TABLE MediaTypes(
-	mediaTypeID serial primary key,
+	MediaTypeID serial primary key,
 	mimeType text,
 	description text,
 	allowed boolean,
@@ -105,7 +121,7 @@ ALTER TABLE Resources ADD FOREIGN KEY (ResourceCategory) REFERENCES Categories o
 ALTER TABLE Resources ADD FOREIGN KEY (EmbargoAuth) REFERENCES AuthUsers on delete cascade;
 ALTER TABLE Tags ADD FOREIGN KEY (ResourceID) REFERENCES Resources on delete cascade;
 ALTER TABLE ObjectReferences ADD FOREIGN KEY (ResourceID) REFERENCES Resources on delete cascade;
-ALTER TABLE Resources ADD FOREIGN KEY (ObjectType) REFERENCES ObjectTypes on delete cascade;
+ALTER TABLE Resources ADD FOREIGN KEY (ObjectType) REFERENCES MediaTypes on delete cascade;
 ALTER TABLE Authorship ADD FOREIGN KEY (ResourceID) REFERENCES Resources on delete cascade;
 
 INSERT INTO AuthUsers Values(default, 'Scott', 'Farley','sfarley2@wisc.edu', '', default);
@@ -161,8 +177,8 @@ INSERT INTO MediaTypes VALUES (default, 'application/zip', 'ZIP Archive', TRUE, 
 INSERT INTO MediaTypes VALUES (default, 'application/illustrator', 'Illustrator Document', TRUE, default);
 INSERT INTO MediaTypes VALUES (default, 'application/octet-stream', 'Binary Data', TRUE, default);
 INSERT INTO MediaTypes VALUES (default, 'application/vnd.geo+json', 'GeoJSON Data', TRUE, default);
-
-
+INSERT INTO MediaTypes VALUES (Default, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'MS Word [.docx])', TRUE, default);
+INSERT INTO MediaTypes VALUES (default, 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'Powerpoint Presentation [.pptx]', TRUE, default);
 
 	
 

@@ -124,6 +124,12 @@
       }
 
     }
+    refs = []
+    for (var i = 1; i <= globals.refCount; i++){
+      tag = '#ref' + i
+      ref = $(tag).val()
+      refs.push(ref)
+    }
     var resourceCreationDate = $("#resourceCreationDate").val()
     console.log(resourceCreationDate)
     var resourceCategory = $("#resourceCategory option:selected").text()
@@ -143,9 +149,7 @@
       creationDate: resourceCreationDate,
       resourceCategory: resourceCategory,
       tags: tagList,
-      references: [
-        ref
-      ],
+      references: refs,
       resourceDescription: resourceDescription,
       notes: notes,
       uploader: {

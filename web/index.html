@@ -40,20 +40,26 @@ html, body{
     <!-- Latest compiled and minified JavaScript -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
     <script>
-      $.getJSON("http://localhost:8080/recent", function(data){
-        $("#results").empty()
-        console.log(data)
-        for (var i =0; i< data.data.length; i++){
-          item = data.data[i]
-          authorString = item.authors[0].authorfirst + " " + item.authors[0].authormiddle + " " + item.authors[0].authorlast
-          if (item.authors.length > 1){
-            authorString += " et al."
-          }
-          html = "<li>"
-          html += "<strong>" + item.resourcetitle + "</strong><i class='text-muted'>" + authorString + "</i>"
-          html += " </li>"
-          $("#results").append(html)
-        }
+      $.getJSON("http://localhost:8080/search?limit=10&sortby=uploaded", function(data){
+          //get the ten most recently uploaded objects
+          rows = data['data']
+          for (var i=0; i< rows.length; i++){
+            thisRow = rows[i]
+            html = "<li><div>"
+            html += "<h3><i>" + thisRow['resourceTitle'] + "</i></h3>"
+            for (var j = 0; j < thisRow.authors.length; j++){
+              thisAuthor = thisRow.authors[j]
+              html += "<p>" + thisAuthor.first + " " + thisAuthor.middle + " " + thisAuthor.last + "</p>"
+            }
+            if (thisRow.references.length == 0){
+              hasReference = false;
+            }else{
+              hasReference = true;
+            }
+            html += "<p><span>Reference" + hasReference + "</span>&middot;<span>Created: " + thisRow['resourceCreationDate'] + "</span>&middot;<span>Approved: " + thisRow['approved'] + "</span>"
+            html += "</div></li>"
+            $("#results").append(html)
+          } // end main loop
       })
     </script>
   </body>

@@ -26,15 +26,35 @@ html, body{
     <h1 class='page-header'>CartLabDB Client-Facing Index</h1>
     <h4><i>Go to...</i></h4>
     <div class='container'>
-      <a href='authorize.html'>Approval</a><br / />
-      <a href='upload.html'>Uploading</a><br />
-      <a href='search.html'>Search</a><br />
+      <h3><a href='upload.html'>Upload</a></h3>
+      <h3><a href='authorize.html'>Approve</a></h3>
+      <h3><a href='search.html'>Search</a></h3>
     </div>
+
+        <h4 class='page-header'>Recent Uploads</h4>
+      <ol id='results'>
+    </ol>
 
     </div>
     <script   src="https://code.jquery.com/jquery-2.2.4.js"   integrity="sha256-iT6Q9iMJYuQiMWNd9lDyBUStIq/8PuOW33aOqmvFpqI="   crossorigin="anonymous"></script><script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
     <!-- Latest compiled and minified JavaScript -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
-
+    <script>
+      $.getJSON("http://localhost:8080/recent", function(data){
+        $("#results").empty()
+        console.log(data)
+        for (var i =0; i< data.data.length; i++){
+          item = data.data[i]
+          authorString = item.authors[0].authorfirst + " " + item.authors[0].authormiddle + " " + item.authors[0].authorlast
+          if (item.authors.length > 1){
+            authorString += " et al."
+          }
+          html = "<li>"
+          html += "<strong>" + item.resourcetitle + "</strong><i class='text-muted'>" + authorString + "</i>"
+          html += " </li>"
+          $("#results").append(html)
+        }
+      })
+    </script>
   </body>
   </html>

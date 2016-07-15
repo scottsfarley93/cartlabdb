@@ -1,5 +1,5 @@
 {
-  "name": "Cartlab-Backend",
+  "name": "Cartlab",
   "version": "0.0.1",
   "description": "Backend to UW Cartography Lab Website",
   "main": "app.js",
@@ -17,8 +17,7 @@
     "bluebird" : "latest",
     "request" : "latest",
     "xml2js":"latest",
-    "express-session" : "^1.7.6",
-    "bcrypt":"latest"
+    "express-session" : "^1.7.6"
   },
   "author": "Scott Farley",
   "license": "MIT"

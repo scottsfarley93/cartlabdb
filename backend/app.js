@@ -8,11 +8,6 @@ var pg = require('pg');
 var util = require('util');
 var fs = require('fs');
 var promise = require('bluebird');
-var bcrypt = require('bcrypt');
-
-const saltRounds = 10;
-
-
 var pgp = require('pg-promise')(
   {promiseLib: promise}
 );
@@ -196,6 +191,7 @@ function getCitation(referencetxt, resourceID, db){
         citations = json['citations']
         theCitation = citations['citation'][0]
         isValid = theCitation['$']['valid']
+        console.log(theCitation)
         if ((isValid) || (isValid == 'true')){
           insertCitation(theCitation, resourceID, db)
         }else{
@@ -266,9 +262,6 @@ function insertCitation(citation, resourceID, db){
         })
 }
 
-app.get("/search", function(req, res){
-
-})
 
 app.get("/mediaTypes", function(req, res){
   db = createConnection()
@@ -420,31 +413,31 @@ app.post("/signup", function(req, res){
   var userLast = req.body.lastName;
   var userEmail = req.body.email;
   var userPass = req.body.p;
-  bcrypt.hash(myPlaintextPassword, saltRounds, function(err, hash) {
-    db = createConnection()
-    //check to see if the user email already exists
-    sql = "SELECT count(*) FROM authusers where useremail = $1";
-    db.one(sql, [userEmail])
-      .then(function(data){
-        count = data['count']
-        if (count > 0){
-          //user already exists
-          res.json({success: false, error: "User with that email already exists."})
-        }else{
-          sql = "INSERT INTO authusers VALUES(default, $1, $2, $3, $4, FALSE, default)"
-          values = [userFirst, userLast, userEmail, hash]
-          db.none(sql, values)
-            .then(function(){
-              res.json({success: true, data:[]})
-            })
-            .catch(function(err){
-              res.json({success: false, error:err, location: "User insert."})
-            })
-        }
-      }).catch(function(err){
-        res.json({success: false, error: err, location: "User existance check."})
-      })
-  });
+  // bcrypt.hash(myPlaintextPassword, saltRounds, function(err, hash) {
+  //   db = createConnection()
+  //   //check to see if the user email already exists
+  //   sql = "SELECT count(*) FROM authusers where useremail = $1";
+  //   db.one(sql, [userEmail])
+  //     .then(function(data){
+  //       count = data['count']
+  //       if (count > 0){
+  //         //user already exists
+  //         res.json({success: false, error: "User with that email already exists."})
+  //       }else{
+  //         sql = "INSERT INTO authusers VALUES(default, $1, $2, $3, $4, FALSE, default)"
+  //         values = [userFirst, userLast, userEmail, hash]
+  //         db.none(sql, values)
+  //           .then(function(){
+  //             res.json({success: true, data:[]})
+  //           })
+  //           .catch(function(err){
+  //             res.json({success: false, error:err, location: "User insert."})
+  //           })
+  //       }
+  //     }).catch(function(err){
+  //       res.json({success: false, error: err, location: "User existance check."})
+  //     })
+  // });
 })
 
 app.get("/unapprovedUsers", function(req, res){
@@ -455,9 +448,9 @@ app.get("/unapprovedUsers", function(req, res){
     .then(function(data){
       res.json({success: true, data: data})
     })
-    .catch(err){
+    .catch(function(err){
       res.json({success:false, error: err, location: "Authorized User Selection."})
-    }
+    })
 })
 
 app.get("/approveUser/:userID", function(req, res){
@@ -515,21 +508,118 @@ app.post("/login", function(req, res){
   //get the password from the database
   sql = "SELECT * FROM authusers where lower(useremail) = lower($1) LIMIT 1;"
   values = [email]
+//   db.any(sql, values)
+//     .then(function(data){
+//       if (data.length == 0){
+//         //no results were returned
+//         //the user doesn't exist
+//         res.json({success: false, error: "User does not exist."})
+//       }
+//     })
+//   bcrypt.compare("bacon", hash, function(err, res) {
+//     // res == true
+// });
+})
+
+app.get("/search", function(req, res){
+  //get the query string
+  q = req.query.q //matches again authorfirst, authorlast, tagtest, category, title,
+  sortBy = req.query.sortBy
+  mindate = req.query.minDate
+  maxdate = req.query.maxDate
+  author = req.query.author
+  journal = req.query.journal
+  title = req.query.title
+  category = req.query.category
+  //format tags into regex
+  tags = req.query.category
+  offset = req.query.offset
+  limit = +req.query.limit
+  offset = +req.query.offset
+
+
+
+  //make sure things are correctly defined or undefined
+  if ((isNaN(limit)) || (limit === undefined)){
+    limit = 10;
+  }
+  if ((isNaN(offset)) || (offset === undefined)){
+    offset = 0;
+  }
+
+  if(sortBy != undefined){
+    sortby = sortBy.lower()
+  }
+  if (tags != undefined){
+    tagstring = ""
+    for (var  i=0; i< tags.length; i++){
+      tag = tags[i]
+      tagstring += "(" + tag + ") | "
+    }
+  }else{
+    tagstring = null
+  }
+  console.log(tagstring)
+  //correctly specify the field to sortBy
+  switch(sortBy){
+    case 'title':
+      sortField = 'resources.resourcetitle';
+      break;
+    case 'date':
+      sortField = 'resources.resourcedate';
+      break
+    case 'author':
+      sortField = 'authorships.authorlast';
+      break
+    default:
+      sortField = 'resources.resourceid'
+  }
+  console.log(sortField)
+
+  //build the query
+  db = createConnection()
+
+  sql = "SELECT * FROM Resources \
+      	LEFT OUTER JOIN Authorship on Authorship.resourceid = resources.resourceid \
+      	LEFT outer join ObjectReferences on ObjectReferences.resourceid = resources.resourceid \
+      	LEFT OUTER JOIN Tags on Tags.resourceid = resources.resourceid \
+      	INNER JOIN Categories on Categories.categoryid = Resources.resourcecategory \
+      WHERE \
+        	1 = 1 \
+          AND (($1 IS NULL OR lower(resourcetitle) LIKE '%' || lower($1) || '%') \
+            OR ($1 IS NULL OR lower(authorfirst) LIKE '%' || lower($1) || '%') \
+            OR ($1 IS NULL OR lower(authorlast) LIKE '%' || lower($1) || '%') \
+            OR ($1 IS NULL OR lower(tagtext) LIKE '%' || lower($1) || '%') \
+            OR ($1 IS NULL OR lower(categorytext) LIKE '%' || lower($1) || '%')) \
+          AND (($2 IS NULL OR lower(authorfirst) LIKE '%' || lower($2) || '%')\
+            OR ($2 IS NULL OR lower(authorlast) LIKE '%' || lower($2) || '%'))\
+          AND ($3 IS NULL OR lower (categorytext) LIKE '%' || lower($3) || '%')\
+          AND ($4 IS NULL OR lower(journal) LIKE '%' || lower($4) || '%')\
+          AND ($5 IS NULL OR lower(resourcetitle) LIKE '%' || lower($5) || '%')\
+          AND ($6 IS NULL OR lower(tagtext) LIKE '%' || lower($6) || '%')\
+          AND ($7 IS NULL OR resourcedate <= $7)\
+          AND ($8 IS NULL OR resourcedate >= $8)\
+          AND (rejected = FALSE)\
+          AND (embargostatus = FALSE) \
+      ORDER BY $9:value \
+      LIMIT $10:value \
+      OFFSET $11:value  \
+        ;"
+  console.log(sql)
+  values =[q, author, category, journal, title, tagstring, maxdate, mindate, sortField, limit, offset]
+  console.log(values)
   db.any(sql, values)
     .then(function(data){
-      if (data.length == 0){
-        //no results were returned
-        //the user doesn't exist
-        res.json({success: false, error: "User does not exist."})
+      res.json(data)
     })
-  bcrypt.compare("bacon", hash, function(err, res) {
-    // res == true
-});
+    .catch(function(err){
+      res.json(err)
+    })
 })
 
 app.get("/", function(req, res){
   db = createConnection();
-  console.log("DB Connection working.")
+  res.json({message: "App is up and running.", serverStatus: "Running", dbStatus: "Running"})
 })
 
 app.listen(PORT);

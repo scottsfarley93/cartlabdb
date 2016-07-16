@@ -1,5 +1,5 @@
 {
-  "name": "Cartlab",
+  "name": "cartlab",
   "version": "0.0.1",
   "description": "Backend to UW Cartography Lab Website",
   "main": "app.js",
@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "body-parser": "~1.0.1",
+    "body-parser": "latest",
     "express": "latest",
     "httpdispatcher": "latest",
     "pg": "latest",
@@ -17,7 +17,11 @@
     "bluebird" : "latest",
     "request" : "latest",
     "xml2js":"latest",
-    "express-session" : "^1.7.6"
+    "express-session" : "latest",
+    "bcrypt" : "latest",
+    "session-file-store" : "latest",
+    "node-uuid" : "latest",
+    "cookie-parser" : "latest"
   },
   "author": "Scott Farley",
   "license": "MIT"

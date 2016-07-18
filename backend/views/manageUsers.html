@@ -1,0 +1,108 @@
+<html>
+<head>
+  <title>UWCL Admin</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+  <style>
+  #controls{
+    text-align: center;
+  }
+  ul{
+    list-style-type:square !important;
+  }
+  .hangingindent {
+  padding-left: 22px ;
+  text-indent: -22px ;
+}
+#theFile{
+  height: 100%;
+  width: 100%;
+}
+.right{
+  text-align: right;
+  float:right;
+}
+.link{
+  color: white !important;
+}
+  </style>
+</head>
+  <body>
+    <nav class="navbar navbar-default">
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+          <ul class="nav navbar-nav">
+            <li ><a href="/admin">Server Home <span class="sr-only">(current)</span></a></li>
+            <li class='active'><a href="/manageUsers">Manage Users  <span class="badge">{{remainingUsers}}</span><span class="sr-only">(current)</span></a></li>
+            <li><a href="/manageResources">Manage Resources <span class="badge">{{remainingResources}}</span><span class="sr-only">(current)</span></a></li>
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li><strong>{{username}}</strong><br / /><i class='text-success'>{{sessionID}}</i></li>
+            <li><a href="/logout">Logout</a></li>
+          </ul>
+        </div><!-- /.navbar-collapse -->
+      </div><!-- /.container-fluid -->
+    </nav>
+    <div class='container'>
+<h1 class='page-header'>User Management</h1>
+  {{#each userData}}
+    <li class='list-group-item'>
+      {{#if this.approved}}
+      <span class='text-success'>Approved</span><button class='right reject'  data-name='{{this.userfirst}} {{this.userlast}}' data-user='{{this.userid}}' ><span class='glyphicon glyphicon-remove text-warning' ></span></button>
+      <h4>{{this.userlast}}, {{this.userfirst}}</h4>
+      <i class='text-muted'>{{this.useremail}}</i>
+      {{else}}
+      <span class='text-warning'>Pending</span><button class='right reject' data-name='{{this.userfirst}} {{this.userlast}}' data-user='{{this.userid}}'><span class='glyphicon glyphicon-remove text-warning'></span></button>
+      <button class='right approve' data-user={{this.userid}}><span class='glyphicon glyphicon-ok text-success'></span></button>
+      <h4 class='text-warning'>{{this.userlast}}, {{this.userfirst}}</h4>
+      <i class='text-muted'>{{this.useremail}}</i>
+      {{/if}}
+
+    </li>
+  {{/each}}
+
+    <script   src="https://code.jquery.com/jquery-2.2.4.js"   integrity="sha256-iT6Q9iMJYuQiMWNd9lDyBUStIq/8PuOW33aOqmvFpqI="   crossorigin="anonymous"></script><script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+<script>
+$(document).ready(function(){
+  //approve or reject user on button click
+  $(".reject").click(function(){
+    var userid = $(this).data('user')
+    console.log(userid)
+    var username = $(this).data('name')
+    var c = confirm("Are you sure you want to permanently remove " + username + " (#" + userid + ")?")
+    if (c){
+      url = "/removeUser/" + userid
+        $.get(url, {
+          success: function(){
+            location.reload();
+          },
+          error: function(err){
+            console.log(err)
+          }
+        })
+    }
+  })
+  $(".approve").click(function(){
+    var userid = $(this).data('user')
+    console.log(userid)
+    var username = $(this).data('name')
+    var c = confirm("Approve this user?")
+    if (c){
+      url = "/approveUser/" + userid
+        $.get(url, {
+          success: function(){
+            location.reload();
+          },
+          error: function(err){
+            console.log(err)
+          }
+        })
+    }
+  })
+})
+</script>
+
+  </body>
+</html>

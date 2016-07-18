@@ -1,0 +1,52 @@
+<html>
+<head>
+  <title>UWCL Admin</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+
+</head>
+  <body>
+    <nav class="navbar navbar-default">
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+          <ul class="nav navbar-nav">
+            <li class="active"><a href="/admin">Server Home <span class="sr-only">(current)</span></a></li>
+            <li><a href="/manageUsers">Manage Users <span class="badge">{{remainingUsers}}</span><span class="sr-only">(current)</span></a></li>
+            <li><a href="/manageResources">Approve Resources <span class="badge">{{remainingResources}}</span><span class="sr-only">(current)</span></a></li>
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li><strong>{{username}}</strong><br / /><i class='text-success'>{{sessionID}}</i></li>
+            <li><a href="/logout">Logout</a></li>
+          </ul>
+        </div><!-- /.navbar-collapse -->
+      </div><!-- /.container-fluid -->
+    </nav>
+    <div class='container'>
+      <h2 class='page-header'>UWCL Resource Server</h2>
+      <div class='col-xs-6'>
+        <h4>Statistics</h4>
+        <p>Approved Resources <strong class='text-primary'>{{dbStats.resourcecount}}</strong></p>
+        <p>Pending Resources <strong class='text-warning'>{{dbStats.embargocount}}</strong></p>
+        <hr />
+        <p>New Resources Today <strong class='text-muted'>{{dbStats.todaycount}}</strong></p>
+        <p>New Resources This Week <strong class='text-muted'>{{dbStats.weekcount}}</strong></p>
+        <p>New Resources This Month <strong class='text-muted'>{{dbStats.monthcount}}</strong></p>
+        <hr />
+        <p>Approved Users <strong class='text-primary'>{{dbStats.approvedusercount}}</strong></p>
+        <p>Pending Users <strong class='text-primary'>{{dbStats.pendingusercount}}</strong></p>
+        <hr />
+        <p>Authors <strong class='text-primary'>{{dbStats.authorcount}}</strong></p>
+        <p>Categories (<strong class='text-success'>{{dbStats.usedcategorycount}}</strong> / <strong class='text-muted'>{{dbStats.categorycount}}</strong>) (used/total)</p>
+        <p>References <strong class='text-primary'>{{dbStats.referencecount}}</strong></p>
+        <p>File Types (<strong class='text-success'>{{dbStats.usedmediacount}}</strong> / <strong class='text-muted'>{{dbStats.mediacount}}</strong>) (used/allowed)</p>
+        <p>Tags <strong class='text-primary'>{{dbStats.tagcount}}</strong></p>
+
+        {{log dbStats}}
+      </div>
+
+    </div>
+    <script   src="https://code.jquery.com/jquery-2.2.4.js"   integrity="sha256-iT6Q9iMJYuQiMWNd9lDyBUStIq/8PuOW33aOqmvFpqI="   crossorigin="anonymous"></script><script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+  </body>
+</html>

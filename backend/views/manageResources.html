@@ -1,0 +1,109 @@
+<html>
+<head>
+  <title>UWCL Admin</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+  <style>
+  #controls{
+    text-align: center;
+  }
+  ul{
+    list-style-type:square !important;
+  }
+  .hangingindent {
+  padding-left: 22px ;
+  text-indent: -22px ;
+}
+#theFile{
+  height: 100%;
+  width: 100%;
+}
+.link{
+  color: white !important;
+}
+  </style>
+</head>
+  <body>
+    <nav class="navbar navbar-default">
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+          <ul class="nav navbar-nav">
+            <li ><a href="/admin">Server Home <span class="sr-only">(current)</span></a></li>
+            <li><a href="/manageUsers">Manage Users  <span class="badge">{{remainingUsers}}</span><span class="sr-only">(current)</span></a></li>
+            <li class='active'><a href="/manageResources">Approve Resources <span class="badge">{{remainingResources}}</span><span class="sr-only">(current)</span></a></li>
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li><strong>{{username}}</strong><br / /><i class='text-success'>{{sessionID}}</i></li>
+            <li><a href="/logout">Logout</a></li>
+          </ul>
+        </div><!-- /.navbar-collapse -->
+      </div><!-- /.container-fluid -->
+    </nav>
+    <div class='container'>
+<h1 class='page-header'>{{resourceData.resourceTitle}}</h1>
+<div class='col-xs-12'>
+  <div id='controls'>
+    {{#if resourceData}}
+    <button class='btn-large btn btn-success' id='approveButton'><span class='glyphicon glyphicon-check'></span><a href='/approve/{{resourceData.resourceID}}' class='link'>Approve</a></button>
+    <button class='btn-large btn btn-danger' id='rejectButton'><span class='glyphicon glyphicon-remove'></span><a href='/reject/{{resourceData.resourceID}}'  class='link'>Reject</a></button>
+    {{else}}
+      <h3>There are no more pending resources...</h3>
+    {{/if}}
+  </div>
+
+  <div id='summary' class='col-xs-6'>
+    <h4>Resource #{{resourceData.resourceID}}</h4>
+    <p>
+      <span class='text-muted'>ID:</span> <span>{{resourceData.resourceShortName}}</span>
+    </p>
+    <p>
+      <span class='text-muted'>Title:</span> <span>{{resourceData.resourceTitle}}</span>
+    </p>
+    <p>
+      <span class='text-muted'>Created:</span> <span>{{resourceData.resourceCreationDate}}</span>
+    </p>
+    <p>
+      <span class='text-muted'>Uploaded:</span> <span>{{resourceData.approvalDate}}</span>
+    </p>
+    <p>
+      <span class='text-muted'>Category:</span> <span>{{resourceData.resourceCategory}}</span>
+    </p>
+    <p>
+      <span class='text-muted'>Description</span>
+    </p>
+    {{#if resourceData.resourceDescription}}
+      <p>{{resourceData.resourceDescription}}</p>
+    {{else}}
+      <p>
+        <i>None Provided.</i>
+      </p>
+    {{/if}}
+
+    <div class='col-xs-6'>
+      <h5>Authors</h5>
+      {{#each resourceData.authors}}
+        <li style="list-style: none">{{this.last}}, {{this.first}} {{this.middle}}</li>
+      {{/each}}
+    </div>
+    <div class='col-xs-6'>
+      <h5>Tags</h5>
+      {{#each resourceData.tags}}
+        <li style="list-style: none">{{this}}</li>
+      {{/each}}
+    </div>
+    <div class='col-xs-12'>
+      <h5>References</h5>
+      {{#each resourceData.references}}
+        <li style="list-style: none" class='hangingindent'>{{this.string}}</li>
+      {{/each}}
+    </div>
+  </div>
+  <div id='image-holder' class='col-xs-6'>
+    <embed id='theFrame' src='{{resourceData.fileReference}}'>
+  </div>
+
+    <script   src="https://code.jquery.com/jquery-2.2.4.js"   integrity="sha256-iT6Q9iMJYuQiMWNd9lDyBUStIq/8PuOW33aOqmvFpqI="   crossorigin="anonymous"></script><script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+  </body>
+</html>

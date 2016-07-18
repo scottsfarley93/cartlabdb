@@ -91,7 +91,8 @@ html, body{
         p: p
       }, function(data){
         if (data['success']){
-          alert("Login was successful.")
+          console.log(data)
+          //alert("Login was successful.")
           window.location.href = "test.html"
         }else{
           alert(data['message'])

@@ -1,0 +1,101 @@
+<html>
+<head>
+  <title>UWCL Admin</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+  <style>
+  #controls{
+    text-align: center;
+  }
+  ul{
+    list-style-type:square !important;
+  }
+  .hangingindent {
+  padding-left: 22px ;
+  text-indent: -22px ;
+}
+.link{
+  color: white !important;
+}
+#theFrame{
+  height: 75%;
+}
+
+  </style>
+</head>
+  <body>
+    <div class='container'>
+      {{#if resourceData.resourceID}}
+        <h1 class='page-header'>{{resourceData.resourceTitle}}</h1>
+      {{else}}
+        <h1 class='page-header'>Resource Not Found</h1>
+      {{/if}}
+<div class='col-xs-12'>
+  <div id='summary' class='col-xs-6'>
+    <h4>Resource #{{resourceData.resourceID}}</h4>
+    <p>
+      <span class='text-muted'>ID:</span> <span>{{resourceData.resourceShortName}}</span>
+    </p>
+    <p>
+      <span class='text-muted'>Title:</span> <span>{{resourceData.resourceTitle}}</span>
+    </p>
+    <p>
+      <span class='text-muted'>Created:</span> <span>{{resourceData.resourceCreationDate}}</span>
+    </p>
+    <p>
+      <span class='text-muted'>Uploaded:</span> <span>{{resourceData.approvalDate}}</span>
+    </p>
+    <p>
+      <span class='text-muted'>Category:</span> <span>{{resourceData.resourceCategory}}</span>
+    </p>
+    <p>
+      <span class='text-muted'>Description</span>
+    </p>
+    {{#if resourceData.resourceDescription}}
+      <p>{{resourceData.resourceDescription}}</p>
+    {{else}}
+      <p>
+        <i>None Provided.</i>
+      </p>
+    {{/if}}
+
+    <div class='col-xs-6'>
+      <h5>Authors</h5>
+      {{#each resourceData.authors}}
+        <li style="list-style: none">{{this.last}}, {{this.first}} {{this.middle}}</li>
+      {{/each}}
+    </div>
+    <div class='col-xs-6'>
+      <h5>Tags</h5>
+      {{#each resourceData.tags}}
+        <li style="list-style: none">{{this}}</li>
+      {{/each}}
+    </div>
+    <div class='col-xs-12'>
+      <h5>References</h5>
+      {{#each resourceData.references}}
+        <li style="list-style: none" class='hangingindent'>{{this.string}}</li>
+      {{/each}}
+    </div>
+  </div>
+
+  <div id='image-holder' class='col-xs-6'>
+    <embed id='theFrame' class='img-responsive' src='{{resourceData.fileReference}}'>
+    <h5>File Properties</h5>
+    <p>
+      <span class='text-muted'>Type:</span> <span>{{resourceData.fileDescription}}</span><i>({{resourceData.memetype}})</i>
+    </p>
+    <p>
+      <span class='text-muted'>Name:</span> <span>{{resourceData.fileReference}}</span>
+    </p>
+    <p>
+      <span class='text-muted'>Size:</span> <span>{{resourceData.fileSize}}</span>
+    </p>
+  </div>
+
+    <script   src="https://code.jquery.com/jquery-2.2.4.js"   integrity="sha256-iT6Q9iMJYuQiMWNd9lDyBUStIq/8PuOW33aOqmvFpqI="   crossorigin="anonymous"></script><script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.5/handlebars.min.js'></script>
+  </body>
+</html>

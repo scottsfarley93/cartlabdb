@@ -21,12 +21,14 @@ var bodyParser = require('body-parser'); //parse the request body
 var cookieParser = require('cookie-parser')
 
 var app = express() //use the express framework for routing
-
+var hbs = require('hbs');
 
 //set application parameters
 const saltRounds = 10; //for password hashing
+app.set('view engine', 'html');
+app.engine('html', hbs.__express);
 
-app.use(express.static(__dirname + '/public')); //we will serve documents out of this directly --> let's us serve the static images and stuff
+app.use(express.static('public')); //we will serve documents out of this directly --> let's us serve the static images and stuff
 
 //set up sessions (keeps track of users as they browse)
 //we use this as administrator authentication
@@ -390,14 +392,14 @@ app.get("/approve/:id", function(req, res){
     thisResource = req.params.id
     db = createConnection()
     sql = "UPDATE Resources SET EmbargoStatus=FALSE, embargoauth=(SELECT UserID from authusers where lower(useremail)=lower($1)), modified=current_timestamp WHERE resourceid=$2;"
-    values = [session_email, thisResource]
+    values = [req.session.username, thisResource]
     db.none(sql, values)
       .then(function(){
         //insert into the authorized users action table, so we can keep track of rejections and approvals
         sql = "INSERT INTO AuthActions VALUES (DEFAULT, $1, 'Resource', (SELECT UserID from authusers where lower(useremail)=lower($2)), TRUE, default);"
         db.none(sql, [thisResource, req.session.username])
           .then(function(){
-            res.json({success: true, data:[]})
+            res.redirect("/manageResources")
           })
           .catch(function(err){
             res.json({success: false, error: err, location: "AuthActions"})
@@ -426,7 +428,7 @@ app.get("/reject/:id", function(req, res){
         sql = "INSERT INTO AuthActions VALUES (DEFAULT, $1, 'Resource', (SELECT UserID from authusers where lower(useremail)=lower($2)), FALSE, default);"
         db.none(sql, [thisResource, req.session.username])
           .then(function(){
-            res.json({success: true, data:[]})
+            res.redirect("/manageResources")
           })
           .catch(function(err){
             res.json({success: false, error: err, location: "AuthActions"})
@@ -443,11 +445,25 @@ app.get("/reject/:id", function(req, res){
 
 app.get("/resourceStatistics", function(req, res){
   //get statistics about the db holdings
-  sql = "SELECT count(*) FROM resources where embargostatus = TRUE;"
+  sql = "select (select count(*) from resources) as resourcecount,\
+    (select count(*) from authusers WHERE approved = TRUE) as approvedusercount,\
+    (select count(*) from authusers WHERE approved = FALSE) as pendingusercount,\
+    (select count(*) from resources where rejected=TRUE) as rejectedcount,\
+    (select count(*) from resources where embargostatus=TRUE) as embargocount,\
+    (select count(*) from objectreferences) as referencecount,\
+    (select count(distinct(authorlast)) from authorship) as authorcount,\
+    (select count(distinct(tagtext)) from tags) as tagcount,\
+    (select count(*) from categories) as categorycount,\
+    (select count(distinct(resourcecategory)) from resources) as usedcategorycount,\
+    (select count(*) from resources where modified  >= now()::date + interval '1h') as todaycount,\
+    (select count(*) from resources where modified BETWEEN (now() - '1 week'::interval)::timestamp AND now()) as weekcount,\
+    (select count(*) from resources where modified BETWEEN (now() - '1 month'::interval)::timestamp AND now()) as  monthcount,\
+    (select count(*) from mediatypes) as mediacount,\
+    (select count(distinct(objecttype)) from resources) as usedmediacount"
   db = createConnection()
   db.one(sql)
     .then(function(data){
-      res.json({success: true, data: {embargoed: data['count']}})
+      res.json({success: true, data: data})
     }).catch(function(err){
       res.json({success: false, error: err, location: "Embargo stats."})
     })
@@ -519,10 +535,10 @@ app.get("/approveUser/:userID", function(req, res){
       .then(function(){
         //tie this action to an existing user
         sql = "INSERT INTO AuthActions VALUES (DEFAULT, $1, 'User', (SELECT UserID from authusers where lower(useremail)=lower($2)), TRUE, default);"
-        values = [userID, session_email]
+        values = [userID, req.session.username]
         db.none(sql, values)
           .then(function(){
-            res.json({success: true, data: [], sessionToken: req.session.id})
+            res.redirect("/manageUsers")
           })
           .catch(function(err){
             res.json({success: false, error: err, location: "Authorized action insert."})
@@ -537,22 +553,23 @@ app.get("/approveUser/:userID", function(req, res){
   }
 })
 
-app.get("/removeUser/:ID", function(req, res){
+app.get("/removeUser/:userID", function(req, res){
   //permanently remove a user (approved or unapproved)
   //only allow  logged in & registered users to do this action
   isApprovedUser = req.session.admin
   if (isApprovedUser){
     userID = req.params.userID
+    console.log(userID)
     db = createConnection()
     sql = "DELETE FROM authusers where userid = $1";
     db.none(sql, [userID])
       .then(function(){
         //tie this action to an existing user
         sql = "INSERT INTO AuthActions VALUES (DEFAULT, $1, 'User', (SELECT UserID from authusers where lower(useremail)=lower($2)), TRUE, default);"
-        values = [userID, session_email]
+        values = [userID,req.session.username]
         db.none(sql, values)
           .then(function(){
-            res.json({success: true, data: []})
+            res.json({success: true})
           })
           .catch(function(err){
             res.json({success: false, error: err, location: "Authorized action insert."})
@@ -570,10 +587,13 @@ app.get("/removeUser/:ID", function(req, res){
 app.post("/login", function(req, res){
   //process login request from a client
   //sets admin session value to true so we can do admin stuff
-  req.session.name = 'Napoleon';
   var email = req.body.email;
   var testPassword = req.body.p
   db = createConnection()
+  var sess = req.session
+  var hour = 3600000
+  req.session.cookie.expires = new Date(Date.now() + hour)
+  req.session.cookie.maxAge = hour
   //check that the username exists and they have authorization to log in
   sql = "SELECT * FROM authusers where lower(useremail) = lower($1) LIMIT 1;" //should only be one at max
   values = [email]
@@ -582,9 +602,11 @@ app.post("/login", function(req, res){
       if (data.length == 0){
         //no results were returned
         //the user doesn't exist
+        sess.admin = false;
         res.json({success: false, message: "User does not exist."})
       }else if (!data[0]['approved']){
         //the user has yet to be approved
+        sess.admin = false;
         res.json({success: false, message: "This account has not been approved yet."})
       }
       else{
@@ -594,13 +616,14 @@ app.post("/login", function(req, res){
           if (r == true){
             //validation successful
             //set the session variables so we know that the user is logged in.
-            req.session.admin = true;
-            req.session.approved = true;
-            req.session.username = email;
-            req.session.cookie.admin = true;
-            res.json({success: true, message: "Login Successful.", sessionToken: req.session.id})
+            sess.admin = true;
+            sess.approved = true;
+            sess.username = email;
+            //res.json({success: true, message: sess.admin, admin: sess.admin, sessionToken: sess.id, session: sess})
+            res.redirect("/admin");
           }else{
             //invalid credentials
+            sess.admin = false;
             res.json({success: false, message: "Invalid Username or Password."})
           }
       });
@@ -718,104 +741,8 @@ app.get("/search", function(req, res){
     .then(function(data){
       //now we need to convert straight rows to nested JSON
       //structure is resource --> author(s) --> tag(s) -- > reference(s)
-      success = true
-      timestamp = new Date().toLocaleString()
-      theJSON = {timestamp: timestamp}
-      responses = {}
-      for (var i =0; i<data.length; i++){
-        //check if we have processed this one already
-        thisRow = data[i]
-        thisID = thisRow['resourceid']
-        if (responses[thisID] === undefined){
-          responses[thisID] = {
-            authors : [],
-            references : [],
-            tags : []
-          } //this is the base response, to which we add additional properties
-          //add the properties directly
-          responses[thisID]['resourceID'] = thisID
-          responses[thisID]['resourceTitle'] = thisRow['resourcetitle']
-          responses[thisID]['resourceCreationDate'] = thisRow['resourcedate']
-          responses[thisID]['resourceCategory'] = thisRow['categorytext']
-          responses[thisID]['resourceShortName'] = thisRow['resourcename']
-          responses[thisID]['resourceDescription'] = thisRow['resourcedescription']
-          responses[thisID]['fileReference'] = thisRow['objectreference']
-          responses[thisID]['mimetype'] = thisRow['mimetype']
-          responses[thisID]['fileDescription'] = thisRow['Description']
-          responses[thisID]['fileSize'] = thisRow['objectSize']
-          responses[thisID]['uploaderName'] = thisRow['uploaderName']
-          responses[thisID]['approvalDate'] = thisRow['modified']
-        } //end new resource creation
-        //if its not new, we can add authors, tags, and references
-        //do this because it's a left join
-        authorFirst = thisRow['authorfirst']
-        authorMiddle = thisRow['authormiddle']
-        authorLast = thisRow['authorlast']
-        authorshipid = thisRow['authorshipid'] //this is just for reference purposes so that the object is IDed in the array
-        thisAuthor = {
-          'first' : authorFirst,
-          'last' : authorLast,
-          'middle' : authorMiddle,
-          'id' : authorshipid
-        }
-        if (!pluckByID(responses[thisID].authors, authorshipid, true)){
-          responses[thisID].authors.push(thisAuthor)
-        }
-        //now do tags
-        tagtext = thisRow['tagtext']
-        if ((tagtext != null) && (tagtext != undefined)){
-          tagtext = tagtext.toLowerCase()
-          if (responses[thisID].tags.indexOf(tagtext) == -1){
-            responses[thisID].tags.push(tagtext)
-          }
-        } // end of tag-if
-
-        //finally do references
-        thisRefID = thisRow['referenceid']
-        if ((thisRefID != null) && (thisRefID != undefined)){
-          //we definitely have a reference then, so go ahead and parse it
-          //this could be easily modified to return bibtex
-          refTitle = thisRow['title']
-          refAuthors = thisRow['authors']
-          refJournal = thisRow['journal']
-          refPlace = thisRow['place']
-          refVolume = thisRow['volume']
-          refPages = thisRow['pages']
-          refPubYear =  thisRow['pubyear']
-          refPub = thisRow['publisher']
-          refDOI = thisRow['doi']
-          refType = thisRow['typeofreference']
-          refRaw = thisRow['rawref']
-          ref  = {
-            'title' : refTitle,
-            'authors': refAuthors,
-            'journal' : refJournal,
-            'place' : refPlace,
-            'volume' : refVolume,
-            'pages' : refPages,
-            'year' : refPubYear,
-            'publisher' : refPub,
-            'doi' : refDOI,
-            'type' : refType,
-            'string' : refRaw,
-            'id' : thisRefID
-          }
-          if (!pluckByID(responses[thisID].references, thisRefID,  true)){
-            responses[thisID].references.push(ref)
-          }
-          ref = {}
-        }//end of ref-if
-      } // end loop
-
-      //now convert the object to an array for transmit
-      responseList = []
-      for(key in responses){
-        response = responses[key]
-        responseList.push(response) //this is an individual resource object
-      }
-
-      //now send it back to the client
-      theJSON['data'] = responseList
+      nestedData = parseObjectDBResponse(data)
+      theJSON['data'] = nestedData
       res.json(theJSON)
 
     }) //end db success function
@@ -824,42 +751,283 @@ app.get("/search", function(req, res){
     })
 })
 
+
+app.get("/search/:id", function(req, res){
+  var resourceID = req.params.id
+  console.log(resourceID)
+  db = createConnection()
+  sql = "SELECT\
+          resources.resourceid, resources.resourcename, resources.resourcetitle, resources.resourcedescription, resources.objectreference,\
+          resources.uploadername, resources.uploaderemail, categories.categorytext, \
+          authorship.authorfirst, authorship.authormiddle, authorship.authorlast, authorship.authorshipid,\
+           mediatypes.description, mediatypes.mimetype, tags.tagtext, objectreferences.title, objectreferences.journal, \
+           objectreferences.authors, objectreferences.issue, objectreferences.pages, objectreferences.publisher, \
+           objectreferences.doi, objectreferences.referenceid, resources.modified, resources.resourcedate,  \
+           objectreferences.rawref\
+          FROM (SELECT DENSE_RANK() OVER (ORDER BY resources.resourceid) AS dr, resources.*\
+             FROM resources) resources  \
+             left outer join authorship on resources.resourceid = authorship.resourceid \
+          left outer join tags on tags.resourceid = resources.resourceid \
+          left outer join objectreferences on objectreferences.resourceid = resources.resourceid \
+          inner join categories on resources.resourcecategory = categories.categoryid \
+          inner join mediatypes on resources.objecttype = mediatypes.mediatypeid \
+          AND resources.resourceID = $1 AND rejected=FALSE and embargostatus=FALSE \
+          order by resources.modified \
+          ;"
+    db.any(sql, [resourceID])
+      .then(function(data){
+        nestedData = parseObjectDBResponse(data)
+        if (data[0] != undefined){
+          remainingResources = data[0]['remainingcount']
+          remainingUsers = data[0]['usercount']
+        }else{
+          remainingResources = 0;
+          remainingUsers = 0;
+        }
+        console.log(nestedData)
+        localvars = {resourceData: nestedData[0]}
+        res.render('resourcePage', localvars)
+      })
+      .catch(function(err){
+        res.render('error', {error: err})
+      })
+
+})
+
 app.get("/logout", function(req, res){
   //destroy the user session
   req.session.destroy(function(err){
     if (err){
       res.status(500).json({success: false, error: err})
     }else{
-      res.status(200),json({success: true, data: []})
+      res.render("index")
+
     }
   });
 })
 
-app.get("/test", function(req, res){
-  console.log("/test")
-  //test for connection
-  var hour = 3600000
-  req.session.cookie.expires = new Date(Date.now() + hour)
-  req.session.cookie.maxAge = hour
+app.get("/", function(req, res, next){
   console.log(req.session)
-  db = createConnection();
-  res.json({message: "App is up and running.", serverStatus: "Running", dbStatus: "Running", session: req.session})
-
+  if (req.session.admin){
+    res.redirect("/admin");
+  }else{
+    res.render('index', {testvar: "Scott is awesome."})
+  }
 })
 
-// Access the session as req.session
-app.get('/sessionTest', function(req, res, next) {
-  var sess = req.session
-  if (sess.views) {
-    sess.views++
-    res.setHeader('Content-Type', 'text/html')
-    res.write('<p>views: ' + sess.views + '</p>')
-    res.write('<p>expires in: ' + (sess.cookie.maxAge / 1000) + 's</p>')
-    res.end()
-  } else {
-    sess.views = 1
-    res.end('welcome to the session demo. refresh!')
+app.get("/admin", function(req, res, next){
+  //make sure the user is actually logged in
+  if (!req.session.admin){
+    req.session.destroy()
+    res.redirect("/");
+  }else{
+    //get the db statistics for admin review
+    db = createConnection()
+    sql ="select (select count(*) from resources where embargostatus = FALSE and rejected=false) as resourcecount,\
+      (select count(*) from authusers WHERE approved = TRUE) as approvedusercount,\
+      (select count(*) from authusers WHERE approved = FALSE) as pendingusercount,\
+      (select count(*) from resources where rejected=TRUE) as rejectedcount,\
+      (select count(*) from resources where embargostatus=TRUE AND rejected=FALSE) as embargocount,\
+      (select count(*) from objectreferences) as referencecount,\
+      (select count(distinct(authorlast, authorfirst)) from authorship) as authorcount,\
+      (select count(distinct(resourceid)) from objectreferences) as resourceswithreferencescount,\
+      (select count(distinct(tagtext)) from tags) as tagcount,\
+      (select count(*) from categories) as categorycount,\
+      (select count(distinct(resourcecategory)) from resources) as usedcategorycount,\
+      (select count(*) from resources where modified  >= now()::date + interval '1h' and rejected=FALSE) as todaycount,\
+      (select count(*) from resources where modified BETWEEN (now() - '1 week'::interval)::timestamp AND now()  and rejected=FALSE) as weekcount,\
+      (select count(*) from resources where modified BETWEEN (now() - '1 month'::interval)::timestamp AND now()  and rejected=FALSE) as  monthcount,\
+      (select count(*) from mediatypes) as mediacount,\
+      (select count(distinct(objecttype)) from resources) as usedmediacount"
+    db.one(sql)
+      .then(function(data){
+        localvars = {username: req.session.username, sessionID: req.session.id, dbStats: data,
+          remainingUsers: data.pendingusercount, remainingResources: data.embargocount}
+        console.log(localvars)
+        res.render("admin", localvars)
+      })
+      .catch(function(err){
+        console.log(err)
+        res.render("error", {error: err, status: 500})
+      })
+
   }
+})
+
+app.get("/manageResources", function(req, res, next){
+  //get data about a yet-to-be approve resource and send it over to the client via the view
+  if (!req.session.admin){
+    res.redirect("/")
+  }
+  db = createConnection()
+  sql = "SELECT (select count(*) from resources where embargostatus = TRUE and rejected= FALSE) as remainingcount, \
+          (select count(*) from authusers where approved=FALSE) as usercount,\
+          resources.resourceid, resources.resourcename, resources.resourcetitle, resources.resourcedescription, resources.objectreference,\
+          resources.uploadername, resources.uploaderemail, categories.categorytext, \
+          authorship.authorfirst, authorship.authormiddle, authorship.authorlast, authorship.authorshipid,\
+           mediatypes.description, mediatypes.mimetype, tags.tagtext, objectreferences.title, objectreferences.journal, \
+           objectreferences.authors, objectreferences.issue, objectreferences.pages, objectreferences.publisher, \
+           objectreferences.doi, objectreferences.referenceid, resources.modified, resources.resourcedate,  \
+           objectreferences.rawref\
+          FROM (SELECT DENSE_RANK() OVER (ORDER BY resources.resourceid) AS dr, resources.*\
+             FROM resources) resources  \
+             left outer join authorship on resources.resourceid = authorship.resourceid \
+          left outer join tags on tags.resourceid = resources.resourceid \
+          left outer join objectreferences on objectreferences.resourceid = resources.resourceid \
+          inner join categories on resources.resourcecategory = categories.categoryid \
+          inner join mediatypes on resources.objecttype = mediatypes.mediatypeid \
+          WHERE rejected = false and embargostatus = true \
+          order by resources.modified \
+          ;"
+  db.any(sql)
+    .then(function(data){
+      //pull out some non-resource related variables first
+      console.log(data)
+      if (data[0] != undefined){
+        remainingResources = data[0]['remainingcount']
+        remainingUsers = data[0]['usercount']
+      }else{
+        remainingResources = 0;
+        remainingUsers = 0;
+      }
+      //parse the response
+      nestedData = parseObjectDBResponse(data)
+      console.log(nestedData)
+      localvars = {username: req.session.username, sessionID: req.session.id,
+                                    remainingUsers: remainingUsers, remainingResources: remainingResources,
+                                  resourceData: nestedData[0]}
+      console.log(localvars)
+      res.render('manageResources', localvars)
+    }).catch(function(err){
+      res.render("error", {error: err})
+    })
+})
+
+
+function parseObjectDBResponse(data){
+  //structure the multiple joined rows from the database into nested json
+  //designed to take in an array of DB rows and produce an array of nested json objects, one for each resource
+  success = true
+  timestamp = new Date().toLocaleString()
+  theJSON = {timestamp: timestamp}
+  responses = {}
+  for (var i =0; i<data.length; i++){
+    //check if we have processed this one already
+    thisRow = data[i]
+    thisID = thisRow['resourceid']
+    if (responses[thisID] === undefined){
+      responses[thisID] = {
+        authors : [],
+        references : [],
+        tags : []
+      } //this is the base response, to which we add additional properties
+      //add the properties directly
+      responses[thisID]['resourceID'] = thisID
+      responses[thisID]['resourceTitle'] = thisRow['resourcetitle']
+      responses[thisID]['resourceCreationDate'] = thisRow['resourcedate'].toDateString()
+      responses[thisID]['resourceCategory'] = thisRow['categorytext']
+      responses[thisID]['resourceShortName'] = thisRow['resourcename']
+      responses[thisID]['resourceDescription'] = thisRow['resourcedescription']
+      responses[thisID]['fileReference'] = thisRow['objectreference']
+      responses[thisID]['mimetype'] = thisRow['mimetype']
+      responses[thisID]['fileDescription'] = thisRow['description']
+      responses[thisID]['fileSize'] = formatBytes(thisRow['objectSize'])
+      responses[thisID]['uploaderName'] = thisRow['uploaderName']
+      responses[thisID]['approvalDate'] = thisRow['modified'].toDateString()
+      responses[thisID]['imgElement'] = "<img src='" +  thisRow['objectreference'] + "' />"
+    } //end new resource creation
+    //if its not new, we can add authors, tags, and references
+    //do this because it's a left join
+    authorFirst = thisRow['authorfirst']
+    authorMiddle = thisRow['authormiddle']
+    authorLast = thisRow['authorlast']
+    authorshipid = thisRow['authorshipid'] //this is just for reference purposes so that the object is IDed in the array
+    thisAuthor = {
+      'first' : authorFirst,
+      'last' : authorLast,
+      'middle' : authorMiddle,
+      'id' : authorshipid
+    }
+    if (!pluckByID(responses[thisID].authors, authorshipid, true)){
+      responses[thisID].authors.push(thisAuthor)
+    }
+    //now do tags
+    tagtext = thisRow['tagtext']
+    if ((tagtext != null) && (tagtext != undefined)){
+      tagtext = tagtext.toLowerCase()
+      if (responses[thisID].tags.indexOf(tagtext) == -1){
+        responses[thisID].tags.push(tagtext)
+      }
+    } // end of tag-if
+
+    //finally do references
+    thisRefID = thisRow['referenceid']
+    if ((thisRefID != null) && (thisRefID != undefined)){
+      //we definitely have a reference then, so go ahead and parse it
+      //this could be easily modified to return bibtex
+      refTitle = thisRow['title']
+      refAuthors = thisRow['authors']
+      refJournal = thisRow['journal']
+      refPlace = thisRow['place']
+      refVolume = thisRow['volume']
+      refPages = thisRow['pages']
+      refPubYear =  thisRow['pubyear']
+      refPub = thisRow['publisher']
+      refDOI = thisRow['doi']
+      refType = thisRow['typeofreference']
+      refRaw = thisRow['rawref']
+      ref  = {
+        'title' : refTitle,
+        'authors': refAuthors,
+        'journal' : refJournal,
+        'place' : refPlace,
+        'volume' : refVolume,
+        'pages' : refPages,
+        'year' : refPubYear,
+        'publisher' : refPub,
+        'doi' : refDOI,
+        'type' : refType,
+        'string' : refRaw,
+        'id' : thisRefID
+      }
+      if (!pluckByID(responses[thisID].references, thisRefID,  true)){
+        responses[thisID].references.push(ref)
+      }
+      ref = {}
+    }//end of ref-if
+  } // end loop
+
+  //now convert the object to an array for transmit
+  responseList = []
+  for(key in responses){
+    response = responses[key]
+    responseList.push(response) //this is an individual resource object
+  }
+
+  return(responseList) //array
+}
+
+app.get('/manageUsers', function(req, res){
+  if (!req.session.admin){
+    res.redirect("/");
+  }
+  db = createConnection();
+  sql = "SELECT (select count(*) from authusers where approved=FALSE) as usercount, \
+          (select count(*) from resources where embargostatus=TRUE and rejected= FALSE) as resourcecount,\
+      authusers.userid, authusers.userfirst, authusers.userlast, authusers.useremail,  authusers.approved, \
+        authusers.modified FROM authUsers ORDER BY approved;"
+  db.any(sql)
+    .then(function(data){
+      remainingUsers = data[0]['usercount']
+      remainingResources = data[0]['resourcecount']
+      console.log(data)
+      localvars = {username: req.session.username, sessionID: req.session.id,
+                                    remainingUsers: remainingUsers, remainingResources: remainingResources,
+                                  userData: data}
+      res.render('manageUsers', localvars)
+    }).catch(function(err){
+      res.render("error", {error: err})
+    })
 })
 
 function pluckByID(inArr, id, exists)
@@ -872,6 +1040,17 @@ function pluckByID(inArr, id, exists)
             return (exists === true) ? true : inArr[i];
         }
     }
+}
+
+
+function formatBytes(bytes,decimals) {
+  //format file sizes
+   if(bytes == 0) return '0 Byte';
+   var k = 1000; // or 1024 for binary
+   var dm = decimals + 1 || 3;
+   var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+   var i = Math.floor(Math.log(bytes) / Math.log(k));
+   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
 app.listen(PORT); //start the server and make it listen for incoming client requests.

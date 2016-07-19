@@ -1,0 +1,133 @@
+<html>
+<head>
+  <title>UWCL Admin</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+  <style>
+  input.invalid, textarea.invalid{
+  	border: 2px solid red;
+  }
+
+  input.valid, textarea.valid{
+  	border: 2px solid green;
+  }
+  .error{
+	display: none;
+	margin-left: 10px;
+}
+
+.error_show{
+	color: red;
+	margin-left: 10px;
+}
+  </style>
+</head>
+<body>
+  <div class='container'>
+  <h3>User Registration</h3>
+  <p>
+    Authorized users can reject or approve pending resources uploaded by other members of the community.
+    This application will be reviewed by an existing authorized user.
+    You will be contacted within a few days if your status is confirmed.
+  </p>
+  <form action="/registerUser" id='registerForm' method='post'>
+    <fieldset class='form-group'>
+      <label>First Name</label>
+      <input type='text' id='firstname' name='firstName' class='form-control' required />
+      <label>Last Name</label>
+      <input type='text' id='lastname' name='lastName' class='form-control' required/>
+      <label>Email Address <i class='text-muted'>(@wisc.edu)</i></label>
+      <input type='text' id='email' name='email' class='form-control' required />
+      <label>Password</label>
+      <input type='password' id='password1' name='p' class='form-control' required/>
+      <label>Retype Password</label>
+      <input type='password' id='password2' class='form-control' required/>
+      <input type='submit' id='submitButton' class='btn ctn-primary' />
+    </fieldset>
+
+  </form>
+
+    </div>
+
+    <script   src="https://code.jquery.com/jquery-2.2.4.js"   integrity="sha256-iT6Q9iMJYuQiMWNd9lDyBUStIq/8PuOW33aOqmvFpqI="   crossorigin="anonymous"></script><script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.5/handlebars.min.js'></script>
+
+  <script>
+//do the validation of the input form
+$("#firstname").on('input', function(){
+  var input = $(this)
+  var is_name = input.val()
+  if (is_name){
+    input.removeClass('invalid').addClass("valid")
+  }else{
+    input.removeClass('valid').addClass("invalid")
+  }
+})
+
+$("#lastname").on('input', function(){
+  var input = $(this)
+  var is_name = input.val()
+  if (is_name){
+    input.removeClass('invalid').addClass("valid")
+  }else{
+    input.removeClass('valid').addClass("invalid")
+  }
+})
+
+// Email must be an email
+$('#email').on('input', function() {
+	var input=$(this);
+	var re = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
+	var is_email=re.test(input.val());
+	if(is_email){input.removeClass("invalid").addClass("valid");}
+	else{input.removeClass("valid").addClass("invalid");}
+});
+
+
+$("#password1").on("input", function(){
+  var input = $(this)
+  var is_password = input.val();
+  if (is_password){
+    input.removeClass("invalid").addClass("valid")
+  }else{
+    input.removeClass("valid").addClass("invalid")
+  }
+})
+
+$("#password2").on('input', function(){
+  var password1 = $("#password1").val();
+  var password2 = $("#password2").val();
+  if (password1 == password2){
+    $("#password2").removeClass("invalid").addClass('valid')
+  }else{
+    $("#password2").removeClass("valid").addClass("invalid")
+  }
+})
+
+
+// After Form Submitted Validation
+$("#submitButton").click(function(event){
+	var form_data=$("#registerForm").serializeArray();
+	var error_free=true;
+  firstNameValid = $("#firstname").hasClass('valid')
+  lastNameValid = $("#lastname").hasClass("valid")
+  emailValid = $("#email").hasClass("valid")
+  password1Valid = $("#password1").hasClass("valid")
+  password2Valid = $("#password2").hasClass("valid")
+  if ((!firstNameValid) || (!lastNameValid) || (!emailValid) || (!password1Valid) || (!password2Valid)){
+    error_free = false;
+  }
+	if (!error_free){
+    console.log("Errors exist.")
+		event.preventDefault();
+	}
+	else{
+		alert('No errors: Form will be submitted');
+	}
+});
+
+  </script>
+  </body>
+</html>

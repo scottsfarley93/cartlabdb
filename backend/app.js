@@ -485,22 +485,22 @@ app.post("/registerUser", function(req, res){
         count = data['count']
         if (count > 0){
           //user already exists
-          res.json({success: false, message: "User with that email already exists."})
+          res.render('userExists', { error: "User with that email already exists."})
         }else{
           //user doesn't exist, so insert into the db, with approval rights set to false
           sql = "INSERT INTO authusers VALUES(default, $1, $2, $3, $4, FALSE, default)"
           values = [userFirst, userLast, userEmail, hash]
           db.none(sql, values)
             .then(function(){
-              res.json({success: true, data:[]})
+              res.render("/")
             })
             .catch(function(err){
               console.log(err)
-              res.json({success: false, error:err, location: "User insert.", message: "Unexpected error @ user insert."})
+              res.render('error', {success: false, error:err, location: "User insert.", message: "Unexpected error @ user insert."})
             })
         }
       }).catch(function(err){
-        res.json({success: false, error: err, location: "User existance check.", message: "Unexpected  error @ user existance check."})
+        res.render('error', {success: false, error: err, location: "User existance check.", message: "Unexpected  error @ user existance check."})
       })
   });
 })
@@ -758,7 +758,7 @@ app.get("/search/:id", function(req, res){
   db = createConnection()
   sql = "SELECT\
           resources.resourceid, resources.resourcename, resources.resourcetitle, resources.resourcedescription, resources.objectreference,\
-          resources.uploadername, resources.uploaderemail, categories.categorytext, \
+          resources.uploadername, resources.uploaderemail, categories.categorytext, resources.objectsize, \
           authorship.authorfirst, authorship.authormiddle, authorship.authorlast, authorship.authorshipid,\
            mediatypes.description, mediatypes.mimetype, tags.tagtext, objectreferences.title, objectreferences.journal, \
            objectreferences.authors, objectreferences.issue, objectreferences.pages, objectreferences.publisher, \
@@ -863,7 +863,7 @@ app.get("/manageResources", function(req, res, next){
   sql = "SELECT (select count(*) from resources where embargostatus = TRUE and rejected= FALSE) as remainingcount, \
           (select count(*) from authusers where approved=FALSE) as usercount,\
           resources.resourceid, resources.resourcename, resources.resourcetitle, resources.resourcedescription, resources.objectreference,\
-          resources.uploadername, resources.uploaderemail, categories.categorytext, \
+          resources.uploadername, resources.uploaderemail, categories.categorytext, resources.objectsize, \
           authorship.authorfirst, authorship.authormiddle, authorship.authorlast, authorship.authorshipid,\
            mediatypes.description, mediatypes.mimetype, tags.tagtext, objectreferences.title, objectreferences.journal, \
            objectreferences.authors, objectreferences.issue, objectreferences.pages, objectreferences.publisher, \
@@ -931,7 +931,7 @@ function parseObjectDBResponse(data){
       responses[thisID]['fileReference'] = thisRow['objectreference']
       responses[thisID]['mimetype'] = thisRow['mimetype']
       responses[thisID]['fileDescription'] = thisRow['description']
-      responses[thisID]['fileSize'] = formatBytes(thisRow['objectSize'])
+      responses[thisID]['fileSize'] = formatBytes(+thisRow['objectsize'], 2)
       responses[thisID]['uploaderName'] = thisRow['uploaderName']
       responses[thisID]['approvalDate'] = thisRow['modified'].toDateString()
       responses[thisID]['imgElement'] = "<img src='" +  thisRow['objectreference'] + "' />"
@@ -1028,6 +1028,10 @@ app.get('/manageUsers', function(req, res){
     }).catch(function(err){
       res.render("error", {error: err})
     })
+})
+
+app.get("/register", function(req, res){
+  res.render("register", {})
 })
 
 function pluckByID(inArr, id, exists)

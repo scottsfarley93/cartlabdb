@@ -14,12 +14,16 @@
   padding-left: 22px ;
   text-indent: -22px ;
 }
+.link{
+  color: white !important;
+}
+#theFrame{
+  height: 50%;
+  max-height: 50%;
+}
 #theFile{
   height: 100%;
   width: 100%;
-}
-.link{
-  color: white !important;
 }
   </style>
 </head>
@@ -59,12 +63,18 @@
     <p>
       <span class='text-muted'>Title:</span> <span>{{resourceData.resourceTitle}}</span>
     </p>
-    <p>
-      <span class='text-muted'>Created:</span> <span>{{resourceData.resourceCreationDate}}</span>
-    </p>
-    <p>
-      <span class='text-muted'>Uploaded:</span> <span>{{resourceData.approvalDate}}</span>
-    </p>
+    <div class='col-xs-6'>
+      <h5>Authors</h5>
+      {{#each resourceData.authors}}
+        <li style="list-style: none">{{this.last}}, {{this.first}} {{this.middle}}</li>
+      {{/each}}
+    </div>
+    <div class='col-xs-6'>
+      <h5>Tags</h5>
+      {{#each resourceData.tags}}
+        <li style="list-style: none">{{this}}</li>
+      {{/each}}
+    </div>
     <p>
       <span class='text-muted'>Category:</span> <span>{{resourceData.resourceCategory}}</span>
     </p>
@@ -78,28 +88,36 @@
         <i>None Provided.</i>
       </p>
     {{/if}}
-
-    <div class='col-xs-6'>
-      <h5>Authors</h5>
-      {{#each resourceData.authors}}
-        <li style="list-style: none">{{this.last}}, {{this.first}} {{this.middle}}</li>
-      {{/each}}
-    </div>
-    <div class='col-xs-6'>
-      <h5>Tags</h5>
-      {{#each resourceData.tags}}
-        <li style="list-style: none">{{this}}</li>
-      {{/each}}
-    </div>
     <div class='col-xs-12'>
       <h5>References</h5>
       {{#each resourceData.references}}
         <li style="list-style: none" class='hangingindent'>{{this.string}}</li>
       {{/each}}
     </div>
+    <p>
+      <span class='text-muted'>Created:</span> <span>{{resourceData.resourceCreationDate}}</span>
+    </p>
+    <p>
+      <span class='text-muted'>Uploaded:</span> <span>{{resourceData.approvalDate}}</span>
+    </p>
+    <p>
+      <span class='text-muted'>Uploader:</span> <span>{{resourceData.uploaderName}} ({{resourceData.uploaderEmail}})</span>
+    </p>
   </div>
   <div id='image-holder' class='col-xs-6'>
-    <embed id='theFrame' src='{{resourceData.fileReference}}'>
+    <div id='theFrame'>
+      <embed id='theFile' class='img-responsive' src='{{resourceData.fileReference}}'>
+    </div>
+    <h5>File Properties</h5>
+    <p>
+      <span class='text-muted'>Type:</span> <span>{{resourceData.fileDescription}}</span><i>({{resourceData.mimetype}})</i>
+    </p>
+    <p>
+      <span class='text-muted'>Name:</span> <span>{{resourceData.fileReference}}</span>
+    </p>
+    <p>
+      <span class='text-muted'>Size:</span> <span>{{resourceData.fileSize}}</span>
+    </p>
   </div>
 
     <script   src="https://code.jquery.com/jquery-2.2.4.js"   integrity="sha256-iT6Q9iMJYuQiMWNd9lDyBUStIq/8PuOW33aOqmvFpqI="   crossorigin="anonymous"></script><script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>

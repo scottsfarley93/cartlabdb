@@ -29,7 +29,7 @@ app.set('view engine', 'html');
 app.engine('html', hbs.__express);
 
 app.use(express.static('public')); //we will serve documents out of this directly --> let's us serve the static images and stuff
-
+app.set('views', __dirname + '/views');
 //set up sessions (keeps track of users as they browse)
 //we use this as administrator authentication
 //so users can approve and delete resources
@@ -492,7 +492,7 @@ app.post("/registerUser", function(req, res){
           values = [userFirst, userLast, userEmail, hash]
           db.none(sql, values)
             .then(function(){
-              res.render("/")
+              res.render("/index")
             })
             .catch(function(err){
               console.log(err)
@@ -648,7 +648,10 @@ app.get("/search", function(req, res){
   limit = +req.query.limit //only return this many resources
   offset = +req.query.offset  //start at n=offset results from #1
   pubYear = req.query.pubYear //year of publication
-
+  // contentType = req.get('Content-Type'); //type of response --> set in the headers, not in the query string
+  // console.log(contentType)
+  contentType = req.query.contentType // how should we return the response
+  console.log(contentType)
   //make sure things are correctly defined or undefined
   if ((isNaN(limit)) || (limit === undefined)){
     limit = 100;
@@ -673,16 +676,16 @@ app.get("/search", function(req, res){
   //correctly specify the field to sortBy
   switch(sortBy){
     case 'title':
-      sortField = 'resources.resourcetitle';
+      sortField = 'resourcetitle';
       break;
     case 'upload':
-      sortField = 'resources.modified';
+      sortField = 'modified';
       break
     case 'created':
-      sortField = 'resources.resourcedate'
+      sortField = 'resourcedate'
       break
     case 'author':
-      sortField = 'authorships.authorlast';
+      sortField = 'authorlast';
       break
     default:
       sortField = 'resources.resourceid'
@@ -743,8 +746,13 @@ app.get("/search", function(req, res){
       //structure is resource --> author(s) --> tag(s) -- > reference(s)
       nestedData = parseObjectDBResponse(data)
       theJSON['data'] = nestedData
-      res.json(theJSON)
-
+      if ((contentType == "application/json") || (contentType == "json")){
+        res.json(theJSON)
+      }else if ((contentType == "html") || (contentType == " text/html")){
+        res.render("search", {resources: nestedData})
+      }else{
+        res.json(theJSON)
+      }
     }) //end db success function
     .catch(function(err){
       res.json(err)

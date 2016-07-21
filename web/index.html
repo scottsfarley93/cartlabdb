@@ -22,159 +22,64 @@ html, body{
   </head>
 
   <body>
-    <div class='jumbotron'>
-    <h1 class='page-header'>CartLabDB Client-Facing Index</h1>
-    <div class='container col-xs-6' >
-      <h4><i>Go to...</i></h4>
-      <h3><a href='upload.html'>Upload</a></h3>
-      <h3><a href='search.html'>Search</a></h3>
+    <h1 class='page-header'>UW Cartography Resource Search</h1>
+    <div class='col-xs-3'>
+    <input type='text' id='searchbar' class='form-control' /><button class='btn btn-primary' id='search'>Search</button>
+    <h6>Sort By:</h6>
+    <input type='radio' name='sortBy' id='sortByAlpha' value='title' checked="true"/><label>Alphabetical (title)</label><br / />
+    <input type='radio' name='sortBy' id='sortByDate' value='date' /><label>Most Recent</label><br / />
+    <input type='radio' name='sortBy' id='sortByAuthor' value='author' /><label>Alphabetical (author)</label><br / />
     </div>
-    <div class='container col-xs-6'>
-      <h4><i>Administrator Login</i></h4>
-      <label>Email</label>
-      <input type='text' class='form-control' id='login-email'/>
-      <label>Password</label>
-      <input type='password' class='form-control' id='login-p' />
-      <button id='login' class='btn btn-success'>Login</button>
-      <hr />
-      <h4><i>Administrator Registration</i></h4>
-      <p>
-        Use this form to register for administrative access to the system.
-        Your account will be reviewed by an existing administrator and is subject to their approval.
-      </p>
-      <label>First Name</label>
-      <input type='text' class='form-control' id='signup-first'/>
-      <label>Last Name</label>
-      <input type='text' class='form-control' id='signup-last' />
-      <label>Email Address  (.wisc)</label>
-      <input type='email' class='form-control' id='signup-email' />
-      <label>Password</label>
-      <input type='password' class='form-control' id='pass1'/>
-      <label>Retype Password</label>
-      <input type='password' class='form-control' id='pass-check' />
-      <button class='btn btn-primary' id='signup'>Register</button>
-    </div>
-
-        <h4 class='page-header'>Recent Uploads</h4>
-      <ol id='results'>
-    </ol>
+    <div class='col-xs-9 container'>
+    <div id='results'>
 
     </div>
+  </div>
+    <footer id='footer'>
+    </footer>
     <script   src="https://code.jquery.com/jquery-2.2.4.js"   integrity="sha256-iT6Q9iMJYuQiMWNd9lDyBUStIq/8PuOW33aOqmvFpqI="   crossorigin="anonymous"></script><script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
     <!-- Latest compiled and minified JavaScript -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
-    <script>
-    globals = {}
-    globals.hosts = {
-      registerUser : "http://localhost:8080/registerUser",
-      login : "http://localhost:8080/login",
-      search: "http://localhost:8080/search"
+<script>
+searchHost = "http://localhost:8080/search"
+$(document).ready(function(){
+  $("#search").click(function(){
+    search()
+  })
+  $("input[type=radio]").change(function(){
+    console.log("Clicked")
+    if ($("#searchbar").val != ""){
+      search();
     }
+  })
 
-    $(document).ready(function(){
-      getRecentRecords() //get a recent sampling of the uploads
-
-      //fire ajax registration/logins on button clicks
-      $("#login").click(login)
-      $("#signup").click(registerUser)
+  function search(){
+    //get the query parameters
+    q = $("#searchbar").val()
+    sortBy = $("input[name=sortBy]:checked").val()
+    //do the search via ajax
+    $.ajax(searchHost,{
+      data: {
+        q: q,
+        sortBy: sortBy,
+        contentType: "html"
+      },
+      // contentType: "text/html",
+      // dataType: "json",
+      success: function(html){
+        console.log(html)
+        $("#results").empty();
+        $("#results").append(html)
+      },
+      error: function(err){
+        console.log(err)
+      },
+      beforeSend: function(){
+        console.log(this.url)
+      }
     })
-
-    function login(){
-      //called when the login button is clicked
-      //get the params to pass to the server
-      var u = $("#login-email").val();
-      var p = $("#login-p").val();
-
-      //don't need to do any validation, can just do it straight on the server
-      $.post(globals.hosts.login, {
-        email: u,
-        p: p
-      }, function(data){
-        if (data['success']){
-          console.log(data)
-          //alert("Login was successful.")
-          window.location.href = "test.html"
-        }else{
-          alert(data['message'])
-        }
-      })
-
-    }
-
-    function registerUser(){
-      //called when the signup button is clicked
-      //get the params to pass to the server
-      var first = $("#signup-first").val();
-      var last = $("#signup-last").val();
-      var u = $("#signup-email").val();
-      var p = $("#pass1").val();
-      var pcheck = $("#pass-check").val();
-      //check if these are valid signup parameters
-      if (p != pcheck){ //see if the typed passwords match
-        console.log("Passwords do not match.")
-        return
-      }
-      if (!validateEmail(u)){ //see if this is a valid email address format using the regex
-        console.log("Not a valid email.")
-        return
-      }
-      //check that all of the fields are filled in
-      if ((first == "") || (last == "") || (u == "") || (p == "")){
-        console.log("Not all fields set.")
-        return
-      }
-      //now send the signup request.
-      $.post(globals.hosts.registerUser, {
-        fistName: first,
-        lastName: last,
-        email: u,
-        p: p
-      }, function(data){
-        if (data['success']){
-          alert("User registered successsfully.  You will be contacted by an administrator within the next few days if your access is approved.")
-        }else{
-          alert(data['message'])
-        }
-        window.location.href = "index.html"
-      })
-    }
-
-
-    function getRecentRecords(){
-      $.getJSON(globals.hosts.search, {
-        sortBy: 'uploaded',
-        limit: 10
-      }, function(data){
-          //get the ten most recently uploaded objects
-          rows = data['data']
-          for (var i=0; i< rows.length; i++){
-            thisRow = rows[i]
-            html = "<li><div>"
-            html += "<h3><i>" + thisRow['resourceTitle'] + "</i></h3>"
-            for (var j = 0; j < thisRow.authors.length; j++){
-              thisAuthor = thisRow.authors[j]
-              html += "<p>" + thisAuthor.first + " " + thisAuthor.middle + " " + thisAuthor.last + "</p>"
-            }
-            console.log(thisRow)
-            if (thisRow.references.length == 0){
-              hasReference = false;
-            }else{
-              hasReference = true;
-            }
-            html += "<span>Reference: " + hasReference + "</span><br /><span>Created: " + thisRow['resourceCreationDate'].toLocaleString() + "</span><br /><span>Approved: " + thisRow['approvalDate'].toLocaleString() + "</span>"
-            html += "</div></li>"
-            $("#results").append(html)
-          } // end main loop
-      })
-    }
-
-
-    function validateEmail(email) {
-      //test if this is a valid email address.
-      var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-      return re.test(email);
   }
-
-    </script>
+})
+</script>
   </body>
   </html>

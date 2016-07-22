@@ -742,27 +742,84 @@ app.get("/search", function(req, res){
         ;"
   values =[q, author, category, journal, title, tagstring, maxdate, mindate, refQ, pubYear, sortField, offset, maxResource]
   db.any(sql, values)
-    .then(function(data){
+    .then(function(resourceData){
       //now we need to convert straight rows to nested JSON
       //structure is resource --> author(s) --> tag(s) -- > reference(s)
-      nestedData = parseObjectDBResponse(data)
-      //make sure the sorting didn't get messed up by the nesting
-      if (sortField == 'resourcetitle'){
-        sortByKey(nestedData, 'resourceTitle')
-      }else if (sortField == 'modified'){
-        sortByKey(nestedData,'resourceID')
-      }else if(sortField == 'created'){
-        sortByKey(nestedData, 'resourceID').reverse()
+      //make sure we definitely get all of the authors and the tags
+      //get a list of the resourceIDs we returned
+      IDs = []
+      idString = "("
+      nestedData = parseObjectDBResponse(resourceData)
+      for (resource in nestedData){
+        resourceID = nestedData[resource]['resourceID']
+        IDs.push(resourceID)
+        idString += resourceID + ", "
       }
-      theJSON['data'] = nestedData
-      if ((contentType == "application/json") || (contentType == "json")){
-        res.json(theJSON)
-      }else if ((contentType == "html") || (contentType == " text/html")){
+      idString = idString.slice(0, -2)
+      idString += ")"
+      authorQuery = "SELECT resourceid, authorshipid, authorfirst, authormiddle, authorlast from authorship where resourceid in $1:value;"
+      db.any(authorQuery, [idString])
+        .then(function(authors){
+          tagQuery = "SELECT resourceid, tagtext from tags where resourceid in $1:value;"
+          db.any(tagQuery, [idString])
+            .then(function(tags){
+              //now that we have the tags and the authors, we just add those fields into the nested Data object and return
+              for (var j=0; j<IDs.length; j++){
+                resourceid = IDs[j]
+                authors_insert = []
+                for (var q =0; q<authors.length; q++){
+                  thisAuthor = authors[q]
+                  if (thisAuthor.resourceid == resourceid){
+                    authorObj = {
+                      first: thisAuthor.authorfirst,
+                      middle: thisAuthor.authormiddle,
+                      last: thisAuthor.authorlast
+                    }
+                    authors_insert.push(authorObj)
+                  } //end match statement
+                }//end author loop
+                nestedData[j]['authors'] = authors_insert
+                tags_insert = []
+                for (var t=0; t <tags.length; t++){
+                  thisTag = tags[t]
+                  if (thisTag.resourceid == resourceid){
+                    tags_insert.push(thisTag.tagtext)
+                  }//end if
+                }//end tag loop
+                nestedData[j]['tags'] = tags_insert
+              }//end outer loop through resourceids
+              if ((contentType == "json") || (contentType == "application/json")){
+                res.json({success: true, resoures: nestedData})
+              }else{
+                res.render('search', {resources: nestedData})
+              }
+            })
+            .catch(function(err){
+              res.render('error', {error: err})
+            })
 
-        res.render("search", {resources: nestedData})
-      }else{
-        res.json(theJSON)
-      }
+        }).catch(function(err){
+          console.log("Error")
+          res.render('error', {error: err})
+        })
+
+      // //make sure the sorting didn't get messed up by the nesting
+      // if (sortField == 'resourcetitle'){
+      //   sortByKey(nestedData, 'resourceTitle')
+      // }else if (sortField == 'modified'){
+      //   sortByKey(nestedData,'resourceID')
+      // }else if(sortField == 'created'){
+      //   sortByKey(nestedData, 'resourceID').reverse()
+      // }
+      // theJSON['data'] = nestedData
+      // if ((contentType == "application/json") || (contentType == "json")){
+      //   res.json(theJSON)
+      // }else if ((contentType == "html") || (contentType == " text/html")){
+      //
+      //   res.render("search", {resources: nestedData})
+      // }else{
+      //   res.json(theJSON)
+      // }
     }) //end db success function
     .catch(function(err){
       res.json(err)

@@ -1,7 +1,59 @@
-<html>
-
-<body>
-
-  <h1>Hello!</h1>
-</body>
-</html>
+<style>
+.hangingindent{
+  padding-left: 22px ;
+  text-indent: -22px ;
+}
+#date{
+  float:right;
+}
+</style>
+{{#each resources}}
+<div class='media'>
+  <div class='media-left col-xs-2'>
+    <a href="Http://localhost:8080/search/{{this.resourceID}}">
+      <object src="http://localhost:8080/{{this.fileReference}}" data="http://localhost:8080/{{this.fileReference}}" class='img-responsive'>
+      </object>
+    </a>
+  </div>
+  <div class='media-body'>
+    <span class='small text-muted' id='date'>{{this.resourceCreationDate}}</span>
+    <h4 class='media-heading'><a href='http://localhost:8080/search/{{this.resourceID}}'>{{this.resourceTitle}}</a></h4>
+    <p>
+      {{#each this.authors}}
+        <span class='text-muted'>&middot; {{this.last}}, {{this.first}} {{this.middle}}</span>
+      {{else}}
+        <span class='text-muted'>No Author Listed</span>
+      {{/each}}
+    </p>
+    {{#if this.resourceDescription}}
+      <p>
+        <strong>Description:</strong>
+        <span>{{this.resourceDescription}}</span>
+      </p>
+    {{/if}}
+    <p>
+      <strong>Category: </strong>{{this.resourceCategory}}
+    </p>
+    <p>
+      <span class='strong'>Tags: </span>
+      {{#each this.tags}}
+        <span ><a style="text-decoration: underline" href="http://localhost:8000/?q={{this}}">{{this}}</a></span>
+      {{/each}}
+    </p>
+    {{#if this.references}}
+    <div>
+      <h6>References</h6>
+      {{#each this.references}}
+        <span>{{this.string}}</span>
+      {{/each}}
+    </div>
+    {{/if}}
+  </div>
+</div>
+<hr />
+{{else}}
+<h4 class='page-header'>No resources match your query.</h4>
+<p>
+  Please try again with a different search term.
+</p>
+{{/each}}

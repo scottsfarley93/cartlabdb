@@ -36,38 +36,40 @@ margin-left: 10px;
 </style>
 </head>
 <body>
-  <div id='main' class='container'>
-  <h1 class='page-header'>UWCL Resource Uploading Form <span class='text-success'><i class='beta'>beta</i></span></h1>
+<h1 class='page-header'>UWCL Resource Uploading Form <span class='text-success'><i class='beta'>beta</i></span></h1>
+  <div id='main' class='container col-xs-offset-2 col-xs-6'>
+  <h2 class='page-header'>The Resource</h4>
   <label>File</label>
   <input id='fileUpload' type='file' /><i class='invalid' id='file-error' style='display:none'>File Type Not Allowed</i><br / />
-    <label>Resource ID String</label><input type='text' id='resourceID' name='resourceID' class='form-control' placeholder='Roth_2009_CaGIS'/><br />
-    <label>Resource Full Name</label><input type='text' id='resourceName' name='resourceName' class='form-control' placeholder="'A qualitative approach to...'"/><br />
+    <label>Short Identifier <span class='text-muted'>no spaces</span></label><input type='text' id='resourceID' name='resourceID' class='form-control' placeholder='Roth_2009_CaGIS'/><br />
+    <label>Title</label><input type='text' id='resourceName' name='resourceName' class='form-control' placeholder="'A qualitative approach to...'"/><br />
+    <label>Date</label><input type='date' id='resourceCreationDate' name='resourceDate' class='form-control' val="1/1/2016" /><br />
+    <label>Category</label><select id='resourceCategory' class='form-control'>
+    </select> <br / />
+    <label>Description</label><textarea id='resourceDesc' placeholder='A really cool paper by @roberteroth.' class='form-control' ></textarea><br / />
+    <label>Tags <span class='text-muted'>comma separated list</span></label><input type="text" id='tags' name='tags' placeholder="maps, research, cool stuff" class='form-control' /><br / />
+
+  <h2 class='page-header'>The Authors
+    <button id='addAuthor' class='btn btn-success btn-sm'><span class='glyphicon glyphicon-plus'></span></button>
+    <button id='removeAuthor' class='btn btn-alert btn-sm'><span class='glyphicon glyphicon-minus'></span></button>
+  </h2>
     <div id='authors'>
 
     <label>First Author: </label><input type='text' id='authorFirst' class='authorFirst form-control' placeholder='Robert' />
     <input type='text' id='authorMiddle' class='authorMiddle form-control' placeholder="E." />
     <input type='text' id='authorLast' class='authorLast form-control' placeholder="Roth" />
-    <button id='addAuthor' class='btn btn-success'><span class='glyphicon glyphicon-plus'</button><button id='removeAuthor' class='btn btn-alert'><span class='glyphicon glyphicon-minus'</button>
-    </div>
+  </div>
     <br />
-    <label>Resource Creation Date</label><input type='date' id='resourceCreationDate' name='resourceDate' class='form-control' val="1/1/2016" /><br />
-    <label>Resource Category</label><select id='resourceCategory' class='form-control'>
-      <option>project</option>
-      <option>ed</option>
-      <option>ed/370</option>
-      <option>ed/572</option>
-      <option>research</option>
-      <option>design</option>
-    </select> <br / />
-    <label>Resource Description</label><input type='text' id='resourceDesc' placeholder='A really cool paper by @roberteroth.' class='form-control' /><br / />
-    <label>Tags (comma separated list)</label><input type="text" id='tags' name='tags' placeholder="maps, research, cool stuff" class='form-control' /><br / />
-    <div id='refs'>
+
+  <h2 class='page-header'>The References
+    <button id='addReference' class='btn btn-success btn-sm'><span class='glyphicon glyphicon-plus' ></span></button>
+    <button id='removeReference' class='btn btn-alert btn-sm'><span class='glyphicon glyphicon-minus' ></span></button>
+  </h2>
+  <div id='refs'>
       <label>Published Reference</label><input type='text' class='form-control' id='ref1' placeholder='Roth, Robert E., and Mark Harrower. "Addressing map interface usability: learning from the Lakeshore Nature Preserve interactive map." Cartographic Perspectives 60 (2008): 46-66.' />
-      <button id='addReference' class='btn btn-success'><span class='glyphicon glyphicon-plus' ></span></button>
-      <button id='removeReference' class='btn btn-alert'><span class='glyphicon glyphicon-minus' ></span></button>
-    </div>
+  </div>
   <br / />
-  <!-- <label>Notes:</label><input type='text' id='notes' class='form-control' placeholder="Notes you might have about stuff."/><br / /> -->
+    <h2 class='page-header'>The Uploader</h4>
   <label>Uploader Name</label><input type='text' class='form-control' id='uploaderName' placeholder="Your Name" /><br / />
   <label>Uploader Email</label><input type='text' id='uploaderEmail' class='form-control' placeholder='you@wisc.edu' /><br / />
 
@@ -292,11 +294,10 @@ margin-left: 10px;
   function getAllowedMediaTypes(){
     //get the list of media types that we are allowed to upload to the server
     $.getJSON(globals.hosts.mediaTypes, function(data){
-      globals.mediaTypes = data
+      globals.mediaTypes = data['data']
       globals.mediaChecklist = []
-      for (var i=0; i<globals.mediaTypes; i++){
+      for (var i=0; i<globals.mediaTypes.length; i++){
         mime = globals.mediaTypes[i]['mimetype']
-        console.log(mime)
         globals.mediaChecklist.push(mime)
       }
     })
@@ -357,7 +358,7 @@ $("#resourceName").on('input', function(){
   //just check existance
   input = $(this)
   s = input.val()
-  if (hasWhiteSpace(s)){
+  if (!s){
     input.removeClass('valid').addClass('invalid')
   }else{
     input.addClass("valid").removeClass('invalid')

@@ -492,7 +492,7 @@ app.post("/registerUser", function(req, res){
           values = [userFirst, userLast, userEmail, hash]
           db.none(sql, values)
             .then(function(){
-              res.render("/index")
+              res.render("index")
             })
             .catch(function(err){
               console.log(err)
@@ -603,11 +603,11 @@ app.post("/login", function(req, res){
         //no results were returned
         //the user doesn't exist
         sess.admin = false;
-        res.json({success: false, message: "User does not exist."})
+        res.render("error", {success: false, error: "User does not exist."})
       }else if (!data[0]['approved']){
         //the user has yet to be approved
         sess.admin = false;
-        res.json({success: false, message: "This account has not been approved yet."})
+        res.render("notAuthorized", {success: false, message: "This account has not been approved yet.", notApproved: true})
       }
       else{
         //the user does exist, so test the password
@@ -665,6 +665,7 @@ app.get("/search", function(req, res){
   }
   //format tags into regex
   if (tags != undefined){
+    tags = tags.split(',')
     tagstring = ""
     for (var  i=0; i< tags.length; i++){
       tag = tags[i]
@@ -745,10 +746,19 @@ app.get("/search", function(req, res){
       //now we need to convert straight rows to nested JSON
       //structure is resource --> author(s) --> tag(s) -- > reference(s)
       nestedData = parseObjectDBResponse(data)
+      //make sure the sorting didn't get messed up by the nesting
+      if (sortField == 'resourcetitle'){
+        sortByKey(nestedData, 'resourceTitle')
+      }else if (sortField == 'modified'){
+        sortByKey(nestedData,'resourceID')
+      }else if(sortField == 'created'){
+        sortByKey(nestedData, 'resourceID').reverse()
+      }
       theJSON['data'] = nestedData
       if ((contentType == "application/json") || (contentType == "json")){
         res.json(theJSON)
       }else if ((contentType == "html") || (contentType == " text/html")){
+
         res.render("search", {resources: nestedData})
       }else{
         res.json(theJSON)
@@ -940,7 +950,8 @@ function parseObjectDBResponse(data){
       responses[thisID]['mimetype'] = thisRow['mimetype']
       responses[thisID]['fileDescription'] = thisRow['description']
       responses[thisID]['fileSize'] = formatBytes(+thisRow['objectsize'], 2)
-      responses[thisID]['uploaderName'] = thisRow['uploaderName']
+      responses[thisID]['uploaderName'] = thisRow['uploadername']
+      responses[thisID]['uploaderEmail'] = thisRow['uploaderemail']
       responses[thisID]['approvalDate'] = thisRow['modified'].toDateString()
       responses[thisID]['imgElement'] = "<img src='" +  thisRow['objectreference'] + "' />"
     } //end new resource creation
@@ -1063,6 +1074,13 @@ function formatBytes(bytes,decimals) {
    var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
    var i = Math.floor(Math.log(bytes) / Math.log(k));
    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}
+
+function sortByKey(array, key) {
+    return array.sort(function(a, b) {
+        var x = a[key]; var y = b[key];
+        return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+    });
 }
 
 app.listen(PORT); //start the server and make it listen for incoming client requests.

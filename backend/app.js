@@ -788,10 +788,18 @@ app.get("/search", function(req, res){
                 }//end tag loop
                 nestedData[j]['tags'] = tags_insert
               }//end outer loop through resourceids
-              if ((contentType == "json") || (contentType == "application/json")){
-                res.json({success: true, resoures: nestedData})
+              //sort the results in the right way
+              if (sortBy == 'date'){
+                outArray = sortByKey(nestedData, "resourceCreationDate").reverse()
+              }else if(sortBy == "title"){
+                outArray = sortByKey(nestedData, "resourceTitle")
               }else{
-                res.render('search', {resources: nestedData})
+                outArray = nestedData
+              }
+              if ((contentType == "json") || (contentType == "application/json")){
+                res.json({success: true, resoures: outArray})
+              }else{
+                res.render('search', {resources: outArray})
               }
             })
             .catch(function(err){
@@ -802,24 +810,6 @@ app.get("/search", function(req, res){
           console.log("Error")
           res.render('error', {error: err})
         })
-
-      // //make sure the sorting didn't get messed up by the nesting
-      // if (sortField == 'resourcetitle'){
-      //   sortByKey(nestedData, 'resourceTitle')
-      // }else if (sortField == 'modified'){
-      //   sortByKey(nestedData,'resourceID')
-      // }else if(sortField == 'created'){
-      //   sortByKey(nestedData, 'resourceID').reverse()
-      // }
-      // theJSON['data'] = nestedData
-      // if ((contentType == "application/json") || (contentType == "json")){
-      //   res.json(theJSON)
-      // }else if ((contentType == "html") || (contentType == " text/html")){
-      //
-      //   res.render("search", {resources: nestedData})
-      // }else{
-      //   res.json(theJSON)
-      // }
     }) //end db success function
     .catch(function(err){
       res.json(err)

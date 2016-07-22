@@ -9,7 +9,7 @@
 </style>
 {{#each resources}}
 <div class='media'>
-  <div class='media-left col-xs-2'>
+  <div class='media-left col-xs-4'>
     <a href="Http://localhost:8080/search/{{this.resourceID}}">
       <object src="http://localhost:8080/{{this.fileReference}}" data="http://localhost:8080/{{this.fileReference}}" class='img-responsive'>
       </object>
@@ -20,7 +20,7 @@
     <h4 class='media-heading'><a href='http://localhost:8080/search/{{this.resourceID}}'>{{this.resourceTitle}}</a></h4>
     <p>
       {{#each this.authors}}
-        <span class='text-muted'>&middot; {{this.last}}, {{this.first}} {{this.middle}}</span>
+        <span class='text-muted'> <a href="http://localhost:8000/?q={{this.last}}">{{this.last}}, {{this.first}} {{this.middle}}</a></span>
       {{else}}
         <span class='text-muted'>No Author Listed</span>
       {{/each}}
@@ -32,7 +32,7 @@
       </p>
     {{/if}}
     <p>
-      <strong>Category: </strong>{{this.resourceCategory}}
+      <strong>Category: </strong><a href='http://localhost:8000/?q={{this.resourceCategory}}'>{{this.resourceCategory}}</a>
     </p>
     <p>
       <span class='strong'>Tags: </span>

@@ -18,10 +18,19 @@ html, body{
     height: 75%;
     width: 100%;
   }
+  .links{
+    float: right;
+  }
+  #footer{
+    text-align:center;
+    bottom:5px;
+    position: absolute;
+  }
 </style>
   </head>
 
   <body>
+    <a href="upload.html" class='links'>Upload Form</a>
     <h1 class='page-header'>UW Cartography Resource Search</h1>
     <div class='col-xs-3'>
     <input type='text' id='searchbar' class='form-control' /><button class='btn btn-primary' id='search'>Search</button>
@@ -34,12 +43,12 @@ html, body{
 
     </div>
   </div>
-    <footer id='footer'>
-    </footer>
     <script   src="https://code.jquery.com/jquery-2.2.4.js"   integrity="sha256-iT6Q9iMJYuQiMWNd9lDyBUStIq/8PuOW33aOqmvFpqI="   crossorigin="anonymous"></script><script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
     <!-- Latest compiled and minified JavaScript -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
 <script>
+globals = {}
+globals.pageSize = 1
 searchHost = "http://localhost:8080/search"
 $(document).ready(function(){
   //check if there is a query in the works right now
@@ -59,6 +68,9 @@ $(document).ready(function(){
       search();
     }
   })
+  $("#searchbar").pressEnter(function(){
+    search();
+  })
 
   function search(){
     //get the query parameters
@@ -76,13 +88,19 @@ $(document).ready(function(){
          loc += "&";
       location.href = loc + "q=" + q;
     }
+    page = getQueryVariable('page')
+    if (!isNaN(+page)){
+      offset = globals.pageSize
+      limit = globals.pageSize
+    }
+    payload = {
+      q: q,
+      sortBy: sortBy,
+      contentType: "html"
+    }
     //do the search via ajax
     $.ajax(searchHost,{
-      data: {
-        q: q,
-        sortBy: sortBy,
-        contentType: "html"
-      },
+      data: payload,
       // contentType: "text/html",
       // dataType: "json",
       success: function(html){
@@ -111,6 +129,20 @@ function getQueryVariable(variable) {
         }
     }
 }
+
+//to search on enter
+$.fn.pressEnter = function(fn) {
+
+    return this.each(function() {
+        $(this).bind('enterPress', fn);
+        $(this).keyup(function(e){
+            if(e.keyCode == 13)
+            {
+              $(this).trigger("enterPress");
+            }
+        })
+    });
+ };
 </script>
   </body>
   </html>

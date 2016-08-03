@@ -603,11 +603,11 @@ app.post("/login", function(req, res){
         //no results were returned
         //the user doesn't exist
         sess.admin = false;
-        res.render("error", {success: false, error: "User does not exist."})
+        res.render("index", {success: false, message: "Invalid Username or Password.", invalid:true})
       }else if (!data[0]['approved']){
         //the user has yet to be approved
         sess.admin = false;
-        res.render("notAuthorized", {success: false, message: "This account has not been approved yet.", notApproved: true})
+        res.render("index", {success: false, message: "This account has not been approved yet.", notApproved: true})
       }
       else{
         //the user does exist, so test the password
@@ -624,7 +624,7 @@ app.post("/login", function(req, res){
           }else{
             //invalid credentials
             sess.admin = false;
-            res.json({success: false, message: "Invalid Username or Password."})
+            res.render("index", {success: false, message: "Invalid Username or Password.", invalid:true})
           }
       });
       }
@@ -755,8 +755,15 @@ app.get("/search", function(req, res){
         IDs.push(resourceID)
         idString += resourceID + ", "
       }
-      idString = idString.slice(0, -2)
-      idString += ")"
+      console.log(idString)
+      if (idString != "("){ //more than one tag is in the string
+        idString = idString.slice(0, -2)
+        idString += ")" //close the string
+      }else{
+        idString = "(-1)" //this is kind of cheating, but it works.
+      }
+
+      console.log(idString)
       authorQuery = "SELECT resourceid, authorshipid, authorfirst, authormiddle, authorlast from authorship where resourceid in $1:value;"
       db.any(authorQuery, [idString])
         .then(function(authors){
@@ -805,7 +812,6 @@ app.get("/search", function(req, res){
             .catch(function(err){
               res.render('error', {error: err})
             })
-
         }).catch(function(err){
           console.log("Error")
           res.render('error', {error: err})

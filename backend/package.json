@@ -23,7 +23,8 @@
     "pg-promise": "latest",
     "request": "latest",
     "session-file-store": "latest",
-    "xml2js": "latest"
+    "xml2js": "latest",
+    "nodemailer": "latest"
   },
   "author": "Scott Farley",
   "license": "MIT"

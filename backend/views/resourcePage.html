@@ -10,6 +10,9 @@
   ul{
     list-style-type:square !important;
   }
+  .right{
+    float: right;
+  }
   .hangingindent {
   padding-left: 22px ;
   text-indent: -22px ;
@@ -31,7 +34,13 @@
   <body>
     <div class='container'>
       {{#if resourceData.resourceID}}
-        <h1 class='page-header'>{{resourceData.resourceTitle}}</h1>
+        <h1 class='page-header'>{{resourceData.resourceTitle}} <span class='right'>
+          <button class='btn btn-small btn-success' id='downloadButton' data-ref='{{resourceData.fileReference}}'>
+            <span class='glyphicon glyphicon-download' data-toggle="tooltip" data-placement="bottom" title="Download this file">
+            </span>
+          </button>
+      </span>
+    </h1>
       {{else}}
         <h1 class='page-header'>Resource Not Found</h1>
       {{/if}}
@@ -44,6 +53,17 @@
     <p>
       <span class='text-muted'>Title:</span> <span>{{resourceData.resourceTitle}}</span>
     </p>
+    <p>
+      <span class='text-muted'>Category:</span> <span>{{resourceData.resourceCategory}}</span>
+    </p>
+    {{#if resourceData.resourceDescription}}
+    <div class='hangingindent'>
+      <p class='text-muted'>Description</p>
+      <p>{{resourceData.resourceDescription}}</p>
+    </div>
+    {{/if}}
+
+    <hr />
     <div class='col-xs-6'>
       <h5>Authors</h5>
       {{#each resourceData.authors}}
@@ -56,25 +76,14 @@
         <li style="list-style: none">{{this}}</li>
       {{/each}}
     </div>
-    <p>
-      <span class='text-muted'>Category:</span> <span>{{resourceData.resourceCategory}}</span>
-    </p>
-    <p>
-      <span class='text-muted'>Description</span>
-    </p>
-    {{#if resourceData.resourceDescription}}
-      <p>{{resourceData.resourceDescription}}</p>
-    {{else}}
-      <p>
-        <i>None Provided.</i>
-      </p>
-    {{/if}}
+    {{#if resourceData.references}}
     <div class='col-xs-12'>
       <h5>References</h5>
       {{#each resourceData.references}}
         <li style="list-style: none" class='hangingindent'>{{this.string}}</li>
       {{/each}}
     </div>
+    {{/if}}
     <p>
       <span class='text-muted'>Created:</span> <span>{{resourceData.resourceCreationDate}}</span>
     </p>
@@ -91,7 +100,7 @@
     </div>
     <h5>File Properties</h5>
     <p>
-      <span class='text-muted'>Type:</span> <span>{{resourceData.fileDescription}}</span><i>({{resourceData.mimetype}})</i>
+      <span class='text-muted'>Type:</span> <span>{{resourceData.fileDescription}}</span>  <i>({{resourceData.mimetype}})</i>
     </p>
     <p>
       <span class='text-muted'>Name:</span> <span>{{resourceData.fileReference}}</span>
@@ -105,5 +114,17 @@
     <!-- Latest compiled and minified JavaScript -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.5/handlebars.min.js'></script>
+    <script>
+    //init tooltips
+    $(function () {
+      $('[data-toggle="tooltip"]').tooltip()
+    })
+    //enable downloading
+    $("#downloadButton").click(function(e){
+      e.preventDefault()
+      loc = $(this).data('ref')
+      window.location.assign(loc);
+    })
+    </script>
   </body>
 </html>

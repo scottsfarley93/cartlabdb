@@ -23,6 +23,10 @@ var cookieParser = require('cookie-parser')
 var app = express() //use the express framework for routing
 var hbs = require('hbs');
 
+var nodemailer = require('nodemailer');
+
+
+const alertAuthUsers = false;
 
 app.use(function (req, res, next) {
     function logRequest() {
@@ -71,6 +75,14 @@ app.use(function (req, res, next) {
     next()
 });
 
+//write log files
+var log_file = fs.createWriteStream(__dirname + '/removal.log', {flags : 'w'});
+var log_stdout = process.stdout;
+
+writeLog = function(d) { //
+  log_file.write('[' + new Date().toUTCString() + '] ' + util.format(d) + '\n');
+  log_stdout.write('[' + new Date().toUTCString() + '] ' + util.format(d) + '\n');
+};
 
 //set application parameters
 const saltRounds = 10; //for password hashing
@@ -82,7 +94,6 @@ app.set('views', __dirname + '/views');
 //set up sessions (keeps track of users as they browse)
 //we use this as administrator authentication
 //so users can approve and delete resources
-
 app.use(cookieParser('WiscoGeog1786!'));
 app.use(session({
   name: 'connect.sid',
@@ -221,6 +232,9 @@ app.post('/upload', function(req, res){
   });
   form.on('end', function(fields) {
     //produce response for client
+    if (alertAuthUsers){
+      sendNotificationToAdmins() //alert authorized users that a new resource was uploaded by sending them an email
+    }
     res.json({success: true, data: []})
   });
   // parse the incoming request containing the form data
@@ -229,6 +243,70 @@ app.post('/upload', function(req, res){
   });
 
 });
+
+function sendNotificationToAdmins(){
+  db = createConnection()
+  var smtpConfig = {
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true, // use SSL
+      auth: {
+          user: 'UWCLNotifications@gmail.com',
+          pass: 'R0b1ns0n',
+      }
+  };
+  var transporter = nodemailer.createTransport(smtpConfig); //initialize email sender
+  //get the receiptients email addresses
+  db.any("SELECT userfirst, userlast, useremail FROM authusers where approved = true; ")
+    .then(function(data){
+      for (var i=0; i< data.length; i++){
+        //send a customized email to each authorized user in the database that a new resource has been uploaded
+        person = data[i]
+        personFirst = person['userfirst']
+        personEmail = person['useremail']
+        html = '<p>Hi ' + personFirst + ",<p>"
+        html += "<p>This email is to alert you that a new resource has been uploaded to the <b><a href='http://localhost:8000'>UWCL Resource Server</a></b>.\
+          Because you are an authorized user, you are eligibile to approve resources.  Please head over to \
+          <a href='http://localhost:8080'>the admin page</a> to approve or reject this resource.</p>\
+          <br/>\
+          <p>Sincerely,</p>\
+          <b>UWCL Notifications System</b><br>\
+          <br/>\
+          <footer>\
+          <i>This is an automated message.  Please do not respond to it.</i>\
+          <br/>\
+          <address>\
+          Cartography Laboratory<br />\
+          University of Wisconsin-Madison<br />\
+          Madison, Wisconsin<br>\
+          USA\
+          </address>\
+          </footer>\
+          "
+
+        var mailOptions = {
+            from: '"UWCL Notifications" <UWCLNotifications@gmail.com>', // sender address
+            to: personEmail, // list of receivers
+            subject: 'Resource Upload Alert', // Subject line
+            html: html // html body
+        };
+          // send mail with defined transport object
+        transporter.sendMail(mailOptions, function(error, info){
+            if(error){
+                writeLog("WARNING: Failed to send email to " + personEmail);
+                writeLog("\tError Message: " + error)
+                return
+            }
+            writeLog(personEmail + ": SUCCESS.")
+            writeLog('\t' + info.response);
+        });
+      }
+    })
+
+
+
+}
+
 
 function insertReference(db, references, resourceID){
   //get the deconstructed reference from FreeCite

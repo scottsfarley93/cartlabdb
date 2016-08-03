@@ -26,7 +26,7 @@ var hbs = require('hbs');
 var nodemailer = require('nodemailer');
 
 
-const alertAuthUsers = false;
+const alertAuthUsers = true;
 
 app.use(function (req, res, next) {
     function logRequest() {
@@ -40,7 +40,7 @@ app.use(function (req, res, next) {
         method = req.method
         queryString = req['originalUrl']
         protocol = req.protocol
-        path = req['path']
+        pathname = req['path']
         statusCode = res['statusCode']
         sessionID = res['req']['sessionID']
         try{
@@ -49,7 +49,7 @@ app.use(function (req, res, next) {
           sessionUser = undefined
         }
 
-        sql = "INSERT INTO calllog values (default, ${path}, ${method}, ${remoteIP}, \
+        sql = "INSERT INTO calllog values (default, ${pathname}, ${method}, ${remoteIP}, \
               ${queryString}, ${userAgent}, ${statusCode}, default, \
               ${protocol}, ${sessionID}, ${sessionUser}, ${hostname});"
         db.none(sql, {
@@ -57,7 +57,7 @@ app.use(function (req, res, next) {
           userAgent:userAgent,
           method: method,
           queryString: queryString,
-          path:path,
+          pathname:pathname,
           statusCode:statusCode,
           protocol:protocol,
           sessionID:sessionID,
@@ -76,7 +76,7 @@ app.use(function (req, res, next) {
 });
 
 //write log files
-var log_file = fs.createWriteStream(__dirname + '/removal.log', {flags : 'w'});
+var log_file = fs.createWriteStream(__dirname + '/email.log', {flags : 'w'});
 var log_stdout = process.stdout;
 
 writeLog = function(d) { //
@@ -293,14 +293,14 @@ function sendNotificationToAdmins(){
           // send mail with defined transport object
         transporter.sendMail(mailOptions, function(error, info){
             if(error){
-                writeLog("WARNING: Failed to send email to " + personEmail);
+                writeLog("WARNING: Failed to send email to " + mailOptions['to']);
                 writeLog("\tError Message: " + error)
                 return
             }
-            writeLog(personEmail + ": SUCCESS.")
+            writeLog(mailOptions['to'] + ": SUCCESS.")
             writeLog('\t' + info.response);
         });
-      }
+      }//end loop
     })
 
 
@@ -771,9 +771,11 @@ app.get("/search", function(req, res){
   limit = +req.query.limit //only return this many resources
   offset = +req.query.offset  //start at n=offset results from #1
   pubYear = req.query.pubYear //year of publication
+  fileType = decodeURI(req.query.fileType)//mimetype of file type
   // contentType = req.get('Content-Type'); //type of response --> set in the headers, not in the query string
   contentType = req.query.contentType // how should we return the response
   //make sure things are correctly defined or undefined
+  console.log(mindate)
   if ((isNaN(limit)) || (limit === undefined)){
     limit = 100;
   }
@@ -847,10 +849,11 @@ app.get("/search", function(req, res){
           AND ($4 IS NULL OR lower(journal) LIKE '%' || lower($4) || '%')\
           AND ($5 IS NULL OR lower(resourcetitle) LIKE '%' || lower($5) || '%')\
           AND ($6 IS NULL OR lower(tagtext) LIKE '%' || lower($6) || '%')\
-          AND ($7 IS NULL OR resourcedate <= $7)\
-          AND ($8 IS NULL OR resourcedate >= $8)\
+          AND ($7 IS NULL OR resourcedate <= $7::date)\
+          AND ($8 IS NULL OR resourcedate >= $8::date)\
           AND (rejected = FALSE)\
           AND (embargostatus = FALSE) \
+          AND ($14 IS NULL or mediatypes.mimetype = $14) \
           AND (($9 IS NULL or lower(title) LIKE '%' || lower($9) || '%')\
             OR ($9 IS NULL or lower(journal) LIKE '%' || lower($9) || '%')\
             OR ($9 IS NULL or lower(authors) LIKE '%' || lower($9) || '%')\
@@ -861,7 +864,7 @@ app.get("/search", function(req, res){
           AND dr BETWEEN $12:value AND ($13:value)\
       ORDER BY $11:value \
         ;"
-  values =[q, author, category, journal, title, tagstring, maxdate, mindate, refQ, pubYear, sortField, offset, maxResource]
+  values =[q, author, category, journal, title, tagstring, maxdate, mindate, refQ, pubYear, sortField, offset, maxResource, fileType]
   db.any(sql, values)
     .then(function(resourceData){
       //now we need to convert straight rows to nested JSON

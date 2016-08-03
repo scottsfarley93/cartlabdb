@@ -23,6 +23,55 @@ var cookieParser = require('cookie-parser')
 var app = express() //use the express framework for routing
 var hbs = require('hbs');
 
+
+app.use(function (req, res, next) {
+    function logRequest() {
+        db = createConnection()
+        res.removeListener('finish', logRequest);
+        res.removeListener('close', logRequest);
+        headers = req.headers
+        remoteIP = req.ip
+        hostname = req.hostname
+        userAgent = headers['user-agent']
+        method = req.method
+        queryString = req['originalUrl']
+        protocol = req.protocol
+        path = req['path']
+        statusCode = res['statusCode']
+        sessionID = res['req']['sessionID']
+        try{
+          sessionUser = res['req']['session']['username']
+        }catch(err){
+          sessionUser = undefined
+        }
+
+        sql = "INSERT INTO calllog values (default, ${path}, ${method}, ${remoteIP}, \
+              ${queryString}, ${userAgent}, ${statusCode}, default, \
+              ${protocol}, ${sessionID}, ${sessionUser}, ${hostname});"
+        db.none(sql, {
+          remoteIP: remoteIP,
+          userAgent:userAgent,
+          method: method,
+          queryString: queryString,
+          path:path,
+          statusCode:statusCode,
+          protocol:protocol,
+          sessionID:sessionID,
+          sessionUser: sessionUser,
+          hostname: hostname
+        }).then(function(){
+          //pass
+        }).catch(function(err){
+          console.log("ERROR: " + err.message)
+        })
+    }
+    res.on('finish', logRequest);
+    res.on('close', logRequest);
+    //could add before hook here
+    next()
+});
+
+
 //set application parameters
 const saltRounds = 10; //for password hashing
 app.set('view engine', 'html');
@@ -126,7 +175,6 @@ app.post('/upload', function(req, res){
           //these are a many-to-one table, hence this structure
           //one resource --> many authors
           var resourceID = data['resourceid']
-          console.log("Inserted resource.  ID is " + resourceID)
           sql = ""
           vals = []
           for (var i=0; i<authors.length; i++){
@@ -136,7 +184,6 @@ app.post('/upload', function(req, res){
           }
           db.none(sql, vals)
             .then(function(){
-              console.log("Inserted authors, now doing tags...")
               //now add the tags
               //same many-to-one strucutre
               sql = ""
@@ -216,7 +263,6 @@ function getCitation(referencetxt, resourceID, db){
         if ((isValid) || (isValid == 'true')){
           insertCitation(theCitation, resourceID, db)
         }else{
-          console.log("Error fetching or parsing citation from freeCite")
           //just because freecite can't parse it doesn't mean its not a reference
           //just insert the rawstring instead
           sql =  "INSERT INTO ObjectReferences VALUES (default, $1, null, null, null, null, null, null, null, null, null, null, null, $2, default);"
@@ -559,7 +605,6 @@ app.get("/removeUser/:userID", function(req, res){
   isApprovedUser = req.session.admin
   if (isApprovedUser){
     userID = req.params.userID
-    console.log(userID)
     db = createConnection()
     sql = "DELETE FROM authusers where userid = $1";
     db.none(sql, [userID])
@@ -649,9 +694,7 @@ app.get("/search", function(req, res){
   offset = +req.query.offset  //start at n=offset results from #1
   pubYear = req.query.pubYear //year of publication
   // contentType = req.get('Content-Type'); //type of response --> set in the headers, not in the query string
-  // console.log(contentType)
   contentType = req.query.contentType // how should we return the response
-  console.log(contentType)
   //make sure things are correctly defined or undefined
   if ((isNaN(limit)) || (limit === undefined)){
     limit = 100;
@@ -755,15 +798,12 @@ app.get("/search", function(req, res){
         IDs.push(resourceID)
         idString += resourceID + ", "
       }
-      console.log(idString)
       if (idString != "("){ //more than one tag is in the string
         idString = idString.slice(0, -2)
         idString += ")" //close the string
       }else{
         idString = "(-1)" //this is kind of cheating, but it works.
       }
-
-      console.log(idString)
       authorQuery = "SELECT resourceid, authorshipid, authorfirst, authormiddle, authorlast from authorship where resourceid in $1:value;"
       db.any(authorQuery, [idString])
         .then(function(authors){
@@ -813,7 +853,6 @@ app.get("/search", function(req, res){
               res.render('error', {error: err})
             })
         }).catch(function(err){
-          console.log("Error")
           res.render('error', {error: err})
         })
     }) //end db success function
@@ -825,7 +864,6 @@ app.get("/search", function(req, res){
 
 app.get("/search/:id", function(req, res){
   var resourceID = req.params.id
-  console.log(resourceID)
   db = createConnection()
   sql = "SELECT\
           resources.resourceid, resources.resourcename, resources.resourcetitle, resources.resourcedescription, resources.objectreference,\
@@ -855,7 +893,6 @@ app.get("/search/:id", function(req, res){
           remainingResources = 0;
           remainingUsers = 0;
         }
-        console.log(nestedData)
         localvars = {resourceData: nestedData[0]}
         res.render('resourcePage', localvars)
       })
@@ -878,7 +915,6 @@ app.get("/logout", function(req, res){
 })
 
 app.get("/", function(req, res, next){
-  console.log(req.session)
   if (req.session.admin){
     res.redirect("/admin");
   }else{
@@ -914,7 +950,6 @@ app.get("/admin", function(req, res, next){
       .then(function(data){
         localvars = {username: req.session.username, sessionID: req.session.id, dbStats: data,
           remainingUsers: data.pendingusercount, remainingResources: data.embargocount}
-        console.log(localvars)
         res.render("admin", localvars)
       })
       .catch(function(err){
@@ -953,7 +988,6 @@ app.get("/manageResources", function(req, res, next){
   db.any(sql)
     .then(function(data){
       //pull out some non-resource related variables first
-      console.log(data)
       if (data[0] != undefined){
         remainingResources = data[0]['remainingcount']
         remainingUsers = data[0]['usercount']
@@ -963,11 +997,9 @@ app.get("/manageResources", function(req, res, next){
       }
       //parse the response
       nestedData = parseObjectDBResponse(data)
-      console.log(nestedData)
       localvars = {username: req.session.username, sessionID: req.session.id,
                                     remainingUsers: remainingUsers, remainingResources: remainingResources,
                                   resourceData: nestedData[0]}
-      console.log(localvars)
       res.render('manageResources', localvars)
     }).catch(function(err){
       res.render("error", {error: err})
@@ -1092,7 +1124,6 @@ app.get('/manageUsers', function(req, res){
     .then(function(data){
       remainingUsers = data[0]['usercount']
       remainingResources = data[0]['resourcecount']
-      console.log(data)
       localvars = {username: req.session.username, sessionID: req.session.id,
                                     remainingUsers: remainingUsers, remainingResources: remainingResources,
                                   userData: data}

@@ -1101,6 +1101,7 @@ app.get("/manageResources", function(req, res, next){
 function parseObjectDBResponse(data){
   //structure the multiple joined rows from the database into nested json
   //designed to take in an array of DB rows and produce an array of nested json objects, one for each resource
+  console.log('Parsing data fromDB response.')
   success = true
   timestamp = new Date().toLocaleString()
   theJSON = {timestamp: timestamp}

@@ -121,7 +121,7 @@ function createConnection(){
       host: conf.db.host,
       port: conf.db.port,
       database: conf.db.db,
-      user: conf.db.user,
+      user: conf.db.username,
       password: conf.db.password
   };
 

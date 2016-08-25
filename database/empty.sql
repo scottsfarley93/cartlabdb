@@ -47,10 +47,13 @@ CREATE TABLE callLog (
 	QueryParameters text,
 	UserAgent text,
 	ResponseCode integer,
-	ResponseSize integer,
-	CallTime timestamp default current_timestamp
+	CallTime timestamp default current_timestamp,
+	Protocol text,
+	sessionID text,
+	sessionUser text,
+	hostname text
 );
-	
+
 
 CREATE TABLE Authorship(
 	AuthorshipID serial primary key,
@@ -181,14 +184,3 @@ INSERT INTO MediaTypes VALUES (default, 'application/octet-stream', 'Binary Data
 INSERT INTO MediaTypes VALUES (default, 'application/vnd.geo+json', 'GeoJSON Data', TRUE, default);
 INSERT INTO MediaTypes VALUES (Default, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'MS Word [.docx])', TRUE, default);
 INSERT INTO MediaTypes VALUES (default, 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'Powerpoint Presentation [.pptx]', TRUE, default);
-
-	
-
-
-
-
-	
-
-
-
-

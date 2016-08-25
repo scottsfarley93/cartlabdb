@@ -26,8 +26,13 @@ var hbs = require('hbs');
 var nodemailer = require('nodemailer');
 
 
+//read the file with hostname etc
+var conf = JSON.parse(fs.readFileSync('conf.js', 'utf8'))
+
+//should we email the approvers every time something is uploaded?
 const alertAuthUsers = true;
 
+//log each request after it's been processed
 app.use(function (req, res, next) {
     function logRequest() {
         db = createConnection()
@@ -86,34 +91,38 @@ writeLog = function(d) { //
 
 //set application parameters
 const saltRounds = 10; //for password hashing
+
+//set up html templating
 app.set('view engine', 'html');
 app.engine('html', hbs.__express);
 
 app.use(express.static('public')); //we will serve documents out of this directly --> let's us serve the static images and stuff
 app.set('views', __dirname + '/views');
+
+
 //set up sessions (keeps track of users as they browse)
 //we use this as administrator authentication
 //so users can approve and delete resources
-app.use(cookieParser('WiscoGeog1786!'));
+app.use(cookieParser(conf.cookieKey));
 app.use(session({
   name: 'connect.sid',
   saveUninitialized: false,
   resave: true,
-  store: new FileStore(),
+  store: new FileStore(), //store it on the file system as JSON
   admin : false,
   username: null,
-  secret: 'WiscoGeog1786!',
+  secret: conf.cookieKey,
 }));
 
 
 function createConnection(){
   //CREATE THE CONNECTION TO THE DATABASE
   var cn = {
-      host: 'localhost',
-      port: 5432,
-      database: 'cartlab',
-      user: 'cartlabuser',
-      password: 'R0b1ns0n!'
+      host: conf.db.host,
+      port: conf.db.port,
+      database: conf.db.db,
+      user: conf.db.user,
+      password: conf.db.password
   };
 
   var db = pgp(cn); //do the connection using pg-promise library
@@ -135,7 +144,7 @@ app.use(function(req, res, next) {
 var router = express.Router();
 
 //Serve on this port
-const PORT=8080;
+const PORT=conf.application.servePort;
 
 
 /////////////////////////////////////////////
@@ -244,15 +253,15 @@ app.post('/upload', function(req, res){
 
 });
 
-function sendNotificationToAdmins(){
+function sendNotificationToAdmins(){//email
   db = createConnection()
   var smtpConfig = {
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true, // use SSL
+      host: conf.SMTP.host,
+      port: conf.SMTP.port,
+      secure: conf.SMTP.secure, // use SSL
       auth: {
-          user: 'UWCLNotifications@gmail.com',
-          pass: 'R0b1ns0n',
+          user: conf.SMTP.username,
+          pass: conf.SMTP.password,
       }
   };
   var transporter = nodemailer.createTransport(smtpConfig); //initialize email sender
@@ -265,9 +274,9 @@ function sendNotificationToAdmins(){
         personFirst = person['userfirst']
         personEmail = person['useremail']
         html = '<p>Hi ' + personFirst + ",<p>"
-        html += "<p>This email is to alert you that a new resource has been uploaded to the <b><a href='http://localhost:8000'>UWCL Resource Server</a></b>.\
+        html += "<p>This email is to alert you that a new resource has been uploaded to the <b><a href='" + conf.application.URI + "'>UWCL Resource Server</a></b>.\
           Because you are an authorized user, you are eligibile to approve resources.  Please head over to \
-          <a href='http://localhost:8080'>the admin page</a> to approve or reject this resource.</p>\
+          <a href='" + conf.application.URI + "'>the admin page</a> to approve or reject this resource.</p>\
           <br/>\
           <p>Sincerely,</p>\
           <b>UWCL Notifications System</b><br>\

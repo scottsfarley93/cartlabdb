@@ -60,10 +60,10 @@ html, body{
 <script>
 globals = {};
 globals.hosts = {
-  categories : "http://localhost:8080/categories",
-  search : "http://localhost:8080/search",
-  post : "http://localhost:8080/upload",
-  mediaTypes : "http://localhost:8080/mediatypes"
+  categories : "http://cartlabserver.shc.wisc.edu:8080/categories",
+  search : "http://cartlabserver.shc.wisc.edu:8080/search",
+  post : "http://cartlabserver.shc.wisc.edu:8080/upload",
+  mediaTypes : "http://cartlabserver.shc.wisc.edu:8080/mediatypes"
 }
 function getCategories(populate){
   $.getJSON(globals.hosts.categories, function(data){

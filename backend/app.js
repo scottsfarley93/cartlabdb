@@ -767,6 +767,8 @@ app.post("/login", function(req, res){
 app.get("/search", function(req, res){
   //this is the main search function
   //get the query string
+
+  console.log(req.query)
   q = req.query.q //matches again authorfirst, authorlast, tagtest, category, title,
   sortBy = req.query.sortBy //order the results by this
   mindate = req.query.minDate //first date included , yyyy-mm-dd

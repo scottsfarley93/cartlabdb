@@ -99,10 +99,11 @@ USA
   <script>
   globals = {}
   globals.hosts = {
-    categories : "http://localhost:8080/categories",
-    search : "http://localhost:8080/search",
-    post : "http://localhost:8080/upload",
-    mediaTypes : "http://localhost:8080/mediatypes"
+    categories : "http://cartlabserver.shc.wisc.edu:8080/categories",
+    search : "http://cartlabserver.shc.wisc.edu:8080/search",
+    post : "http://cartlabserver.shc.wisc.edu:8080/upload",
+    mediaTypes : "http://cartlabserver.shc.wisc.edu:8080/mediatypes",
+    upload : "http://cartlabserver.shc.wisc.edu:8080/upload"
   }
   globals.authorCount = 1;
   globals.refCount = 1;
@@ -291,7 +292,7 @@ USA
           formData.append('metadata', metastring)
         }
         $.ajax({
-          url: 'http://localhost:8080/upload',
+          url: globals.hosts.upload,
           type: 'POST',
           data: formData,
           processData: false,

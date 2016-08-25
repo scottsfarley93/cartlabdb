@@ -1,8 +1,12 @@
+//Trigger a search from the search bar
+
 $("#search").click(function(e){
   console.log("Clicked.")
   e.preventDefault()
   redirectToSearch();
 })
+
+
 
 $("#searchbar").pressEnter(function(e){
   console.log("Entered.")

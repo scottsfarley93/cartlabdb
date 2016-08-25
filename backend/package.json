@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "bcrypt": "latest",
+    "bcryptjs": "latest",
     "bluebird": "latest",
     "body-parser": "latest",
     "cookie-parser": "latest",
@@ -26,6 +26,7 @@
     "xml2js": "latest",
     "nodemailer": "latest"
   },
+  "repository" : "https://github.com/scottsfarley93/catlabdb",
   "author": "Scott Farley",
   "license": "MIT"
 }

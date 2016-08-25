@@ -13,7 +13,7 @@ var pgp = require('pg-promise')( //postgres promise library makes it easier to e
 );
 var request = require('request'); //make HTTP calls from the server
 var parser = require('xml2js').parseString; //process XML to JSON
-var bcrypt = require('bcrypt') //password hashing
+var bcrypt = require('bcryptjs') //password hashing
 var session = require('express-session'); //sessions management for express
 var FileStore = require('session-file-store')(session) //session storage
 var uuid = require('node-uuid'); //generates IDs for things like sessions
@@ -775,7 +775,6 @@ app.get("/search", function(req, res){
   // contentType = req.get('Content-Type'); //type of response --> set in the headers, not in the query string
   contentType = req.query.contentType // how should we return the response
   //make sure things are correctly defined or undefined
-  console.log(mindate)
   if ((isNaN(limit)) || (limit === undefined)){
     limit = 100;
   }

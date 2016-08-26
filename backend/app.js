@@ -886,6 +886,7 @@ app.get("/search", function(req, res){
 
         values =[q, author, category, journal, title, tagstring, maxdate, mindate,
           refQ, pubYear, sortField, offset, maxResource, fileType]
+
   // sql = "SELECT\
   //         resources.resourceid, resources.resourcename, resources.resourcetitle, resources.modified, \
   //         resources.resourcedate, resources.resourcedescription, categories.categorytext, \

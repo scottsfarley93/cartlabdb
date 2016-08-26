@@ -11,16 +11,16 @@
 <div class='media'>
   <div class='media-left col-xs-4'>
     <a href="Http://localhost:8080/search/{{this.resourceID}}">
-      <object src="http://localhost:8080/{{this.fileReference}}" data="http://localhost:8080/{{this.fileReference}}" class='img-responsive'>
+      <object src="http://cartlabserver.shc.wisc.edu:8000/{{this.fileReference}}" data="http://cartlabserver.shc.wisc.edu:8000/{{this.fileReference}}" class='img-responsive'>
       </object>
     </a>
   </div>
   <div class='media-body'>
     <span class='small text-muted' id='date'>{{this.resourceCreationDate}}</span>
-    <h4 class='media-heading'><a href='http://localhost:8080/search/{{this.resourceID}}'>{{this.resourceTitle}}</a></h4>
+    <h4 class='media-heading'><a href='http://cartlabserver.shc.wisc.edu:8000/search/{{this.resourceID}}'>{{this.resourceTitle}}</a></h4>
     <p>
       {{#each this.authors}}
-        <span class='text-muted'> <a href="http://localhost:8000/?q={{this.last}}">{{this.last}}, {{this.first}} {{this.middle}}</a></span>
+        <span class='text-muted'> <a href="http://cartlabserver.shc.wisc.edu:8000/?q={{this.last}}">{{this.last}}, {{this.first}} {{this.middle}}</a></span>
       {{else}}
         <span class='text-muted'>No Author Listed</span>
       {{/each}}

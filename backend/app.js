@@ -1,4 +1,5 @@
 //Module imports
+console.log("Starting up...")
 var http = require('http'); //basic HTTP commands
 var express = require("express"); //express application framework
 var dispatcher = require('httpdispatcher'); //routing
@@ -28,7 +29,7 @@ var nodemailer = require('nodemailer');
 
 //read the file with hostname etc
 var conf = JSON.parse(fs.readFileSync('conf.js', 'utf8'))
-
+console.log(conf)
 //should we email the approvers every time something is uploaded?
 const alertAuthUsers = true;
 
@@ -807,6 +808,8 @@ app.get("/search", function(req, res){
   }else{
     tagstring = null
   }
+
+
   //correctly specify the field to sortBy
   switch(sortBy){
     case 'title':
@@ -826,7 +829,13 @@ app.get("/search", function(req, res){
   }
   //sort out the min/max
   maxResource = offset + limit
-
+  // if (mindate === undefined){
+  //   minDate = "1900-01-01"
+  // }
+  // if (maxdate === undefined){
+  //   maxdate = "2100-01-01"
+  // }
+  // if (fileT)
   //build the query
   db = createConnection()
   //this is the big-ass SQL query that matches all of the query params
@@ -863,7 +872,6 @@ app.get("/search", function(req, res){
           AND ($8 IS NULL OR resourcedate >= $8::date)\
           AND (rejected = FALSE)\
           AND (embargostatus = FALSE) \
-          AND ($14 IS NULL or mediatypes.mimetype = $14) \
           AND (($9 IS NULL or lower(title) LIKE '%' || lower($9) || '%')\
             OR ($9 IS NULL or lower(journal) LIKE '%' || lower($9) || '%')\
             OR ($9 IS NULL or lower(authors) LIKE '%' || lower($9) || '%')\
@@ -874,13 +882,18 @@ app.get("/search", function(req, res){
           AND dr BETWEEN $12:value AND ($13:value)\
       ORDER BY $11:value \
         ;"
-  values =[q, author, category, journal, title, tagstring, maxdate, mindate, refQ, pubYear, sortField, offset, maxResource, fileType]
+  values =[q, author, category, journal, title, tagstring, maxdate, mindate,
+    refQ, pubYear, sortField, offset, maxResource, fileType]
+  console.log("VALUES ARE ---- ")
+  console.log(values)
   db.any(sql, values)
     .then(function(resourceData){
       //now we need to convert straight rows to nested JSON
       //structure is resource --> author(s) --> tag(s) -- > reference(s)
       //make sure we definitely get all of the authors and the tags
       //get a list of the resourceIDs we returned
+      console.log("Got DB First response")
+      console.log(resourceData)
       IDs = []
       idString = "("
       nestedData = parseObjectDBResponse(resourceData)

@@ -32,12 +32,12 @@
       </p>
     {{/if}}
     <p>
-      <strong>Category: </strong><a href='http://localhost:8000/?q={{this.resourceCategory}}'>{{this.resourceCategory}}</a>
+      <strong>Category: </strong><a href='http://cartlabserver.shc.wisc.edu:8000/?q={{this.resourceCategory}}'>{{this.resourceCategory}}</a>
     </p>
     <p>
       <span class='strong'>Tags: </span>
       {{#each this.tags}}
-        <span ><a style="text-decoration: underline" href="http://localhost:8000/?q={{this}}">{{this}}</a></span>
+        <span ><a style="text-decoration: underline" href="http://cartlabserver.shc.wisc.edu:8000/?q={{this}}">{{this}}</a></span>
       {{/each}}
     </p>
     {{#if this.references}}

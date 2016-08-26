@@ -840,6 +840,7 @@ app.get("/search", function(req, res){
   db = createConnection()
   //this is the big-ass SQL query that matches all of the query params
   //if one of the params is not set, it will be NULL, so that clause is automatically true, so it doesn't affect the results
+
   sql = "SELECT\
           resources.resourceid, resources.resourcename, resources.resourcetitle, resources.modified, \
           resources.resourcedate, resources.resourcedescription, categories.categorytext, \
@@ -868,8 +869,8 @@ app.get("/search", function(req, res){
           AND ($4 IS NULL OR lower(journal) LIKE '%' || lower($4) || '%')\
           AND ($5 IS NULL OR lower(resourcetitle) LIKE '%' || lower($5) || '%')\
           AND ($6 IS NULL OR lower(tagtext) LIKE '%' || lower($6) || '%')\
-          AND ($7 IS NULL OR resourcedate <= $7::date)\
-          AND ($8 IS NULL OR resourcedate >= $8::date)\
+          AND ($7 IS NULL OR resourcedate <= $7)\
+          AND ($8 IS NULL OR resourcedate >= $8)\
           AND (rejected = FALSE)\
           AND (embargostatus = FALSE) \
           AND (($9 IS NULL or lower(title) LIKE '%' || lower($9) || '%')\
@@ -882,8 +883,67 @@ app.get("/search", function(req, res){
           AND dr BETWEEN $12:value AND ($13:value)\
       ORDER BY $11:value \
         ;"
-  values =[q, author, category, journal, title, tagstring, maxdate, mindate,
-    refQ, pubYear, sortField, offset, maxResource, fileType]
+
+        values =[q, author, category, journal, title, tagstring, maxdate, mindate,
+          refQ, pubYear, sortField, offset, maxResource, fileType]
+  // sql = "SELECT\
+  //         resources.resourceid, resources.resourcename, resources.resourcetitle, resources.modified, \
+  //         resources.resourcedate, resources.resourcedescription, categories.categorytext, \
+  //         resources.objectreference, resources.objectsize, authorship.authorshipid, authorship.authorfirst, authorship.authorlast, \
+  //         authorship.authormiddle, tags.tagtext, objectreferences.referenceid, objectreferences.authors, \
+  //         objectreferences.title, objectreferences.journal, objectreferences.place, objectreferences.volume, \
+  //         objectreferences.issue, objectreferences.pages, objectreferences.pubyear, objectreferences.publisher, \
+  //         objectreferences.doi, objectreferences.typeofreference, objectreferences.rawref, mediatypes.mimetype, mediatypes.description \
+  //         FROM (SELECT DENSE_RANK() OVER (ORDER BY resources.resourceid) AS dr, resources.*\
+  //            FROM resources) resources  \
+  //     	LEFT OUTER JOIN Authorship on Authorship.resourceid = resources.resourceid \
+  //       LEFT OUTER JOIN Tags on Tags.resourceid = resources.resourceid \
+  //     	LEFT OUTER JOIN ObjectReferences on ObjectReferences.resourceid = resources.resourceid \
+  //     	INNER JOIN Categories on Categories.categoryid = Resources.resourcecategory \
+  //       INNER JOIN MediaTypes on Resources.ObjectType = MediaTypes.mediatypeid \
+  //     WHERE \
+  //       	1 = 1 \
+  //         AND ((${query} IS NULL OR lower(resourcetitle) LIKE '%' || lower(${query}) || '%') \
+  //           OR (${query} IS NULL OR lower(authorfirst) LIKE '%' || lower(${query}) || '%') \
+  //           OR ({$query} IS NULL OR lower(authorlast) LIKE '%' || lower(${query}) || '%') \
+  //           OR (${query} IS NULL OR lower(tagtext) LIKE '%' || lower(${query}) || '%') \
+  //           OR (${query} IS NULL OR lower(categorytext) LIKE '%' || lower(${query}) || '%')) \
+  //         AND ((${author} IS NULL OR lower(authorfirst) LIKE '%' || lower(${author}) || '%')\
+  //           OR (${author} IS NULL OR lower(authorlast) LIKE '%' || lower(${author}) || '%'))\
+  //         AND (${category} IS NULL OR lower (categorytext) LIKE '%' || lower(${category}) || '%')\
+  //         AND (${journal} IS NULL OR lower(journal) LIKE '%' || lower(${journal}) || '%')\
+  //         AND (${title} IS NULL OR lower(resourcetitle) LIKE '%' || lower(${title}) || '%')\
+  //         AND (${tagstring} IS NULL OR lower(tagtext) LIKE '%' || lower(${tagstring}) || '%')\
+  //         AND (${maxdate} IS NULL OR resourcedate <= ${maxdate}::date)\
+  //         AND (${mindate} IS NULL OR resourcedate >= ${mindate}::date)\
+  //         AND (rejected = FALSE)\
+  //         AND (embargostatus = FALSE) \
+  //         AND ((${refQ} IS NULL or lower(title) LIKE '%' || lower(${refQ}) || '%')\
+  //           OR (${refQ} IS NULL or lower(journal) LIKE '%' || lower(${refQ}) || '%')\
+  //           OR (${refQ} IS NULL or lower(authors) LIKE '%' || lower(${refQ}) || '%')\
+  //           OR (${refQ} IS NULL or lower(place) LIKE '%' || lower(${refQ}) || '%')\
+  //           OR (${refQ}IS NULL or lower(publisher) LIKE '%' || lower(${refQ}) || '%')\
+  //           OR (${refQ} IS NULL or lower(rawref) LIKE '%' || lower(${refQ}) || '%'))\
+  //         AND (${pubYear} IS NULL or pubYear = ${pubYear})\
+  //         AND dr BETWEEN ${offset}:value AND (${maxResource}:value)\
+  //     ORDER BY ${sortField}:value \
+  //       ;"
+  // values =[q, author, category, journal, title, tagstring, maxdate, mindate,
+  //   refQ, pubYear, sortField, offset, maxResource]
+  // values = {
+  //   query : q,
+  //   author: author,
+  //   category: category,
+  //   journal: journal,
+  //   title: title,
+  //   tagstring: tagstring,
+  //   maxdate: maxdate,
+  //   mindate: mindate,
+  //   refQ: refQ,
+  //   pubYear: pubYear,
+  //   sortField: sortField,
+  //   offset: offset
+  // }
   console.log("VALUES ARE ---- ")
   console.log(values)
   db.any(sql, values)

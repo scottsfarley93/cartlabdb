@@ -31,7 +31,7 @@ var nodemailer = require('nodemailer');
 var conf = JSON.parse(fs.readFileSync('conf.js', 'utf8'))
 console.log(conf)
 //should we email the approvers every time something is uploaded?
-const alertAuthUsers = false;
+const alertAuthUsers = true;
 
 //log each request after it's been processed
 app.use(function (req, res, next) {
@@ -849,7 +849,7 @@ app.get("/search", function(req, res){
           authorship.authormiddle, tags.tagtext, objectreferences.referenceid, objectreferences.authors, \
           objectreferences.title, objectreferences.journal, objectreferences.place, objectreferences.volume, \
           objectreferences.issue, objectreferences.pages, objectreferences.pubyear, objectreferences.publisher, \
-          objectreferences.doi, objectreferences.typeofreference, objectreferences.rawref, mediatypes.mimetype, mediatypes.description, resources.link \
+          objectreferences.doi, objectreferences.typeofreference, objectreferences.rawref, mediatypes.mimetype, mediatypes.description, resources.hyperlink \
           FROM (SELECT DENSE_RANK() OVER (ORDER BY resources.resourceid) AS dr, resources.*\
              FROM resources) resources  \
       	LEFT OUTER JOIN Authorship on Authorship.resourceid = resources.resourceid \
@@ -1207,7 +1207,7 @@ function parseObjectDBResponse(data){
       responses[thisID]['uploaderEmail'] = thisRow['uploaderemail']
       responses[thisID]['approvalDate'] = thisRow['modified'].toDateString()
       responses[thisID]['imgElement'] = "<img src='" +  thisRow['objectreference'] + "' />"
-      responses[thisID]['link'] = thisRow['link']
+      responses[thisID]['link'] = thisRow['hyperlink']
     } //end new resource creation
     //if its not new, we can add authors, tags, and references
     //do this because it's a left join

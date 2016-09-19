@@ -183,14 +183,15 @@ app.post('/upload', function(req, res){
       references = metadata['references']
       uploaderName = metadata['uploader']['name']
       uploaderEmail = metadata['uploader']['email']
+      link = metadata['link']
       //automatically approve this resource if the user is logged in as admin
       //otherwise, put it into embargo
       autoAuth = !req.session.admin  //admin will be true, so flip so embargo is off
-      vals = [resourceID, resourceName, resourceDate, resourceCategory.toLowerCase(), resourceDescription, notes, autoAuth, null, resourceFilename,  resourceFileType, resourceSize, uploaderName, uploaderEmail]
+      vals = [resourceID, resourceName, resourceDate, resourceCategory.toLowerCase(), resourceDescription, notes, autoAuth, null, resourceFilename,  resourceFileType, resourceSize, uploaderName, uploaderEmail, link]
       //get the category for this
 
                                           //databaseID/resourceID/resourceName/resourceDate/category/                     description/notes/embargo/auth/path/type/size/name/email/modified
-      db.one("INSERT INTO Resources Values(default, $1, $2, $3, (select categoryid from categories where lower(categorytext) = $4), $5, $6, $7, $8, $9, (select mediaTypeID from MediaTypes where lower(mimetype) = $10), $11, $12, $13, FALSE, default) returning resourceid;", vals)
+      db.one("INSERT INTO Resources Values(default, $1, $2, $3, (select categoryid from categories where lower(categorytext) = $4), $5, $6, $7, $8, $9, (select mediaTypeID from MediaTypes where lower(mimetype) = $10), $11, $12, $13, FALSE, default, $14) returning resourceid;", vals)
       .then(function(data){
           //now add authorships
           //these are a many-to-one table, hence this structure
@@ -848,7 +849,7 @@ app.get("/search", function(req, res){
           authorship.authormiddle, tags.tagtext, objectreferences.referenceid, objectreferences.authors, \
           objectreferences.title, objectreferences.journal, objectreferences.place, objectreferences.volume, \
           objectreferences.issue, objectreferences.pages, objectreferences.pubyear, objectreferences.publisher, \
-          objectreferences.doi, objectreferences.typeofreference, objectreferences.rawref, mediatypes.mimetype, mediatypes.description \
+          objectreferences.doi, objectreferences.typeofreference, objectreferences.rawref, mediatypes.mimetype, mediatypes.description, resources.link \
           FROM (SELECT DENSE_RANK() OVER (ORDER BY resources.resourceid) AS dr, resources.*\
              FROM resources) resources  \
       	LEFT OUTER JOIN Authorship on Authorship.resourceid = resources.resourceid \
@@ -1206,6 +1207,7 @@ function parseObjectDBResponse(data){
       responses[thisID]['uploaderEmail'] = thisRow['uploaderemail']
       responses[thisID]['approvalDate'] = thisRow['modified'].toDateString()
       responses[thisID]['imgElement'] = "<img src='" +  thisRow['objectreference'] + "' />"
+      responses[thisID]['link'] = thisRow['link']
     } //end new resource creation
     //if its not new, we can add authors, tags, and references
     //do this because it's a left join

@@ -55,7 +55,9 @@ footer{
     </select> <br / />
     <label>Description</label><textarea id='resourceDesc' placeholder='A really cool paper by @roberteroth.' class='form-control' ></textarea><br / />
     <label>Tags <span class='text-muted'>comma separated list</span></label><input type="text" id='tags' name='tags' placeholder="maps, research, cool stuff" class='form-control' /><br / />
-
+    <label>URL <span class='text-muted'><i>if the application is dynamically hosted</i></span></label>
+    <input type='text' id='link' name='link' placeholder='http://myawesomewebsite.com/myproject' class='form-control' /><br/>
+  </br/>
   <h2 class='page-header'>The Authors
     <button id='addAuthor' class='btn btn-success btn-sm'><span class='glyphicon glyphicon-plus'></span></button>
     <button id='removeAuthor' class='btn btn-alert btn-sm'><span class='glyphicon glyphicon-minus'></span></button>
@@ -191,6 +193,7 @@ USA
     var uploaderName = $("#uploaderName").val()
     var uploaderEmail = $("#uploaderEmail").val()
     var resourceFilename = ""
+    var link = $("#link").val()
     //format a metadata object to accompany the file
     var tagList = tags.split(",")
     var metadata = {
@@ -208,7 +211,7 @@ USA
         email: uploaderEmail
       },
       resourceFilename: resourceFilename,
-
+      link: link
     }
     //do form validation
     if ($("#resourceID").hasClass('invalid') || ($("#resourceID").val() == "")){

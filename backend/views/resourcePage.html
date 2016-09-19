@@ -54,7 +54,7 @@
       <span class='text-muted'>Title:</span> <span>{{resourceData.resourceTitle}}</span>
     </p>
     <p>
-      <span class='text-muted'>Project Page:</span> <span>{{resourceData.link}}</span>
+      <span class='text-muted'>Project Page:</span><a ref="{{resourceData.link}}">{{resourceData.link}}</span>
     </p>
     <p>
       <span class='text-muted'>Category:</span> <span>{{resourceData.resourceCategory}}</span>
@@ -99,7 +99,11 @@
   </div>
   <div id='image-holder' class='col-xs-6'>
     <div id='theFrame'>
+      {{#if resourceData.link}}
+      <iframe src+'{{resourceData.link}}'></iframe>
+      {{#else}}
       <embed id='theFile' class='img-responsive' src='{{resourceData.fileReference}}'>
+      {{/if}}
     </div>
     <h5>File Properties</h5>
     <p>

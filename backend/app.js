@@ -1037,7 +1037,7 @@ app.get("/search/:id", function(req, res){
           authorship.authorfirst, authorship.authormiddle, authorship.authorlast, authorship.authorshipid,\
            mediatypes.description, mediatypes.mimetype, tags.tagtext, objectreferences.title, objectreferences.journal, \
            objectreferences.authors, objectreferences.issue, objectreferences.pages, objectreferences.publisher, \
-           objectreferences.doi, objectreferences.referenceid, resources.modified, resources.resourcedate,  \
+           objectreferences.doi, objectreferences.referenceid, resources.modified, resources.resourcedate,  resources.hyperlink, \
            objectreferences.rawref\
           FROM (SELECT DENSE_RANK() OVER (ORDER BY resources.resourceid) AS dr, resources.*\
              FROM resources) resources  \

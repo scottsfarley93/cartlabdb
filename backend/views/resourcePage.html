@@ -85,7 +85,6 @@
     </div>
     {{/if}}
   </div>
-  <div id='image-holder' class='col-xs-12'>
     <div class='col-xs-6'>
       <h5>Upload</h5>
       <li>
@@ -99,6 +98,8 @@
       </li>
 
     </div>
+    <div class='col-xs-6'>
+
     <h5>File Properties</h5>
     <p>
       <span class='text-muted'>Type:</span> <span>{{resourceData.fileDescription}}</span>  <i>({{resourceData.mimetype}})</i>
@@ -109,6 +110,8 @@
     <p>
       <span class='text-muted'>Size:</span> <span>{{resourceData.fileSize}}</span>
     </p>
+
+  </div>
     <div id='theFrame'>
       {{#if resourceData.link}}
       <iframe src='{{resourceData.link}}' height='100%' width='100%' ></iframe>

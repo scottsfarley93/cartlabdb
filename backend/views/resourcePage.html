@@ -44,15 +44,11 @@
 <div class='col-xs-12'>
   <div id='summary' class='col-xs-12'>
     <h4>Resource #{{resourceData.resourceID}}</h4>
-    <p>
-      <span class='text-muted'>ID:</span> <span>{{resourceData.resourceShortName}}</span>
-    </p>
-    <p>
-      <span class='text-muted'>Title:</span> <span>{{resourceData.resourceTitle}}</span>
-    </p>
+    {{#if resourceData.link}}
     <p>
       <span class='text-muted'>Project Page:</span><a ref="{{resourceData.link}}">{{resourceData.link}}</a></span>
     </p>
+    {{/if}}
     <p>
       <span class='text-muted'>Category:</span> <span>{{resourceData.resourceCategory}}</span>
     </p>

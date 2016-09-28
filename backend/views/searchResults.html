@@ -21,7 +21,7 @@
     <strong><i class='link text-muted'><a href="{{this.link}}">{{this.link}}</a></i></strong>
     <p>
       {{#each this.authors}}
-        <span class='text-muted'> <a href="search.html?q={{this.last}}">{{this.last}}, {{this.first}} {{this.middle}}</a></span>
+        <span class='text-muted'> <a href="search.html?q={{this.last}}">{{this.last}}, {{this.first}} {{this.middle}}</a></span><span>&mdot;</span>
       {{else}}
         <span class='text-muted'>No Author Listed</span>
       {{/each}}

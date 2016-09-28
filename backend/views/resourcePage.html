@@ -64,7 +64,7 @@
     {{/if}}
 
     <hr />
-    <div class='col-xs-12'>
+    <div class='col-xs-6'>
       <h5>Authors</h5>
       {{#each resourceData.authors}}
         <li style="list-style: none">{{this.last}}, {{this.first}} {{this.middle}}</li>
@@ -95,13 +95,6 @@
     </p>
   </div>
   <div id='image-holder' class='col-xs-12'>
-    <div id='theFrame'>
-      {{#if resourceData.link}}
-      <iframe src='{{resourceData.link}}' height='100%' width='100%' ></iframe>
-      {{else}}
-      <embed id='theFile' class='img-responsive' src='http://cartlabserver.shc.wisc.edu:8080{{resourceData.fileReference}}'>
-      {{/if}}
-    </div>
     <h5>File Properties</h5>
     <p>
       <span class='text-muted'>Type:</span> <span>{{resourceData.fileDescription}}</span>  <i>({{resourceData.mimetype}})</i>
@@ -112,6 +105,13 @@
     <p>
       <span class='text-muted'>Size:</span> <span>{{resourceData.fileSize}}</span>
     </p>
+    <div id='theFrame'>
+      {{#if resourceData.link}}
+      <iframe src='{{resourceData.link}}' height='100%' width='100%' ></iframe>
+      {{else}}
+      <embed id='theFile' class='img-responsive' src='http://cartlabserver.shc.wisc.edu:8080{{resourceData.fileReference}}'>
+      {{/if}}
+    </div>
   </div>
   <script>
     //init tooltips

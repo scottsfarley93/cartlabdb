@@ -57,8 +57,8 @@
       <span class='text-muted'>Category:</span> <span>{{resourceData.resourceCategory}}</span>
     </p>
     {{#if resourceData.resourceDescription}}
-    <div class='hangingindent'>
-      <p class='text-muted'>Description</p>
+    <div>
+      <h5 class='text-muted'>Description</h5>
       <p>{{resourceData.resourceDescription}}</p>
     </div>
     {{/if}}
@@ -84,15 +84,19 @@
       {{/each}}
     </div>
     {{/if}}
-    <p>
-      <span class='text-muted'>Created:</span> <span>{{resourceData.resourceCreationDate}}</span>
-    </p>
-    <p>
-      <span class='text-muted'>Uploaded:</span> <span>{{resourceData.approvalDate}}</span>
-    </p>
-    <p>
-      <span class='text-muted'>Uploader:</span> <span>{{resourceData.uploaderName}} ({{resourceData.uploaderEmail}})</span>
-    </p>
+    <div class='col-xs-6'>
+      <h5>Upload</h5>
+      <li>
+        <span class='text-muted'>Created:</span> <span>{{resourceData.resourceCreationDate}}</span>
+      </li>
+      <li>
+        <span class='text-muted'>Uploaded:</span> <span>{{resourceData.approvalDate}}</span>
+      </li>
+      <li>
+        <span class='text-muted'>Uploader:</span> <span>{{resourceData.uploaderName}} ({{resourceData.uploaderEmail}})</span>
+      </li>
+
+    </div>
   </div>
   <div id='image-holder' class='col-xs-12'>
     <h5>File Properties</h5>

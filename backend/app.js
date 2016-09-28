@@ -1012,7 +1012,7 @@ app.get("/search", function(req, res){
               if ((contentType == "json") || (contentType == "application/json")){
                 res.json({success: true, resoures: outArray})
               }else{
-                res.render('search', {resources: outArray})
+                res.render('searchResults', {resources: outArray})
               }
             })
             .catch(function(err){

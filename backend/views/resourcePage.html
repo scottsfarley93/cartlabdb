@@ -64,7 +64,7 @@
     {{/if}}
 
     <hr />
-    <div class='col-xs-6'>
+    <div class='col-xs-12'>
       <h5>Authors</h5>
       {{#each resourceData.authors}}
         <li style="list-style: none">{{this.last}}, {{this.first}} {{this.middle}}</li>
@@ -94,7 +94,7 @@
       <span class='text-muted'>Uploader:</span> <span>{{resourceData.uploaderName}} ({{resourceData.uploaderEmail}})</span>
     </p>
   </div>
-  <div id='image-holder' class='col-xs-6'>
+  <div id='image-holder' class='col-xs-12'>
     <div id='theFrame'>
       {{#if resourceData.link}}
       <iframe src='{{resourceData.link}}' height='100%' width='100%' ></iframe>

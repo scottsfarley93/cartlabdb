@@ -52,7 +52,7 @@
     <p>
       <span class='text-muted resource-category-header resource-header-inline'>Category:</span>
       <span class='resource-category'>
-        <a href="search.html?{{resourceData.resourceCategeory}}">{{resourceData.resourceCategory}}</a></span>
+        <a href="category.html?{{resourceData.resourceCategeory}}">{{resourceData.resourceCategory}}</a></span>
     </p>
     {{#if resourceData.resourceDescription}}
     <div>
@@ -106,7 +106,6 @@
       <i class='resource-file-mimetype'>({{resourceData.mimetype}})</i>
     </li>
     <li style="list-style: none" class='resource-file-reference-item'>
-      <span class='text-muted resource-header-inline'>Name:</span>
       <a href="http://cartlabserver.shc.wisc.edu:8080/{{resourceData.fileReference}}" class='resource-file-link'>
         Link <span class='glyphicon-glyphicon-link resource-file-link-glyph'></span>
       </a>

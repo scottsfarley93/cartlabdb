@@ -65,13 +65,13 @@
     <div class='col-xs-6'>
       <h5 class='resource-author-header resource-header'>Authors</h5>
       {{#each resourceData.authors}}
-        <li style="list-style: none" class='resource-author'><a href="search.html?{{this.last}}">{{this.last}}, {{this.first}} {{this.middle}}</a></li>
+        <li style="list-style: none" class='resource-author'><a href="search.html?q={{this.last}}">{{this.last}}, {{this.first}} {{this.middle}}</a></li>
       {{/each}}
     </div>
     <div class='col-xs-6'>
       <h5 class='resource-tag-header resource-header'>Tags</h5>
       {{#each resourceData.tags}}
-        <li style="list-style: none" class='resource-tag'><a href="search.html?{{this}}">{{this}}</a></li>
+        <li style="list-style: none" class='resource-tag'><a href="search.html?q={{this}}">{{this}}</a></li>
       {{/each}}
     </div>
     {{#if resourceData.references}}

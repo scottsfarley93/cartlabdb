@@ -31,7 +31,7 @@ var nodemailer = require('nodemailer');
 var conf = JSON.parse(fs.readFileSync('conf.js', 'utf8'))
 console.log(conf)
 //should we email the approvers every time something is uploaded?
-const alertAuthUsers = true;
+const alertAuthUsers = false;
 
 //log each request after it's been processed
 app.use(function (req, res, next) {

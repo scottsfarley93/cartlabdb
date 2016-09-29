@@ -233,7 +233,7 @@ app.post('/upload', function(req, res){
             })
         })
         .catch(function(err){
-          res.status(500).json({success: false, error: err, location: "Reference insert."})
+          res.json({success: false, error: err, location: "Reference insert."})
         })
     }
   })

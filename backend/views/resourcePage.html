@@ -31,95 +31,103 @@
   <body>
     <div class='container'>
       {{#if resourceData.resourceID}}
-        <h1 class='page-header'>{{resourceData.resourceTitle}} <span class='right'>
-          <button class='btn btn-small btn-success' id='downloadButton' data-ref='{{resourceData.fileReference}}'>
+        <h1 class='page-header resource-title'>{{resourceData.resourceTitle}} <span class='right'>
+          <button class='btn btn-small btn-success resource-download' id='downloadButton' data-ref='{{resourceData.fileReference}}'>
             <span class='glyphicon glyphicon-download' data-toggle="tooltip" data-placement="bottom" title="Download this file">
             </span>
           </button>
       </span>
     </h1>
       {{else}}
-        <h1 class='page-header'>Resource Not Found</h1>
+        <h1 class='page-header resource-not-found'>Resource Not Found</h1>
       {{/if}}
 <div class='col-xs-12'>
   <div id='summary' class='col-xs-12'>
-    <h4>Resource #{{resourceData.resourceID}}</h4>
+    <h4 class='resource-id'>Resource #{{resourceData.resourceID}}</h4>
     {{#if resourceData.link}}
     <p>
-      <span class='text-muted'>Project Page:</span><a ref="{{resourceData.link}}">{{resourceData.link}}</a></span>
+      <span class='text-muted resource-project-header resource-header-inline'>Project Page:</span><a class='resource-link' href="{{resourceData.link}}">{{resourceData.link}}</a></span>
     </p>
     {{/if}}
     <p>
-      <span class='text-muted'>Category:</span> <span>{{resourceData.resourceCategory}}</span>
+      <span class='text-muted resource-category-header resource-header-inline'>Category:</span>
+      <span class='resource-category'>
+        <a href="search.html?{{resourceData.resourceCategeory}}">{{resourceData.resourceCategory}}</a></span>
     </p>
     {{#if resourceData.resourceDescription}}
     <div>
-      <h5 class='text-muted'>Description</h5>
-      <p>{{resourceData.resourceDescription}}</p>
+      <h5 class='text-muted resource-description-header resource-header'>Description</h5>
+      <p class='resource-description'>{{resourceData.resourceDescription}}</p>
     </div>
     {{/if}}
 
     <hr />
     <div class='col-xs-6'>
-      <h5>Authors</h5>
+      <h5 class='resource-author-header resource-header'>Authors</h5>
       {{#each resourceData.authors}}
-        <li style="list-style: none">{{this.last}}, {{this.first}} {{this.middle}}</li>
+        <li style="list-style: none" class='resource-author'><a href="search.html?{{this.last}}">{{this.last}}, {{this.first}} {{this.middle}}</a></li>
       {{/each}}
     </div>
     <div class='col-xs-6'>
-      <h5>Tags</h5>
+      <h5 class='resource-tag-header resource-header'>Tags</h5>
       {{#each resourceData.tags}}
-        <li style="list-style: none">{{this}}</li>
+        <li style="list-style: none" class='resource-tag'><a href="search.html?{{this}}">{{this}}</a></li>
       {{/each}}
     </div>
     {{#if resourceData.references}}
     <div class='col-xs-12'>
-      <h5>References</h5>
+      <h5 class='resource-reference-header resource-header'>References</h5>
       {{#each resourceData.references}}
-        <li style="list-style: none" class='hangingindent'>{{this.string}}</li>
+        <li style="list-style: none" class='hangingindent resource-reference'>{{this.string}}</li>
       {{/each}}
     </div>
     {{/if}}
   </div>
   <div class='col-xs-12' id='image-holder'>
     <div class='col-xs-6'>
-      <h5>Upload</h5>
-      <li style="list-style: none">
-        <span class='text-muted'>Created:</span> <span>{{resourceData.resourceCreationDate}}</span>
+      <h5 class='resource-upload-header resource-header'>Upload</h5>
+      <li style="list-style: none" class='resource-upload-date-item'>
+        <span class='text-muted resource-header-inline'>Created:</span> <span class='resource-upload-date'>{{resourceData.resourceCreationDate}}</span>
       </li>
-      <li style="list-style: none">
-        <span class='text-muted'>Uploaded:</span> <span>{{resourceData.approvalDate}}</span>
+      <li style="list-style: none" class='resource-aprroval-date-item'>
+        <span class='text-muted resource-header-inline'>Uploaded:</span> <span class='resource-approval-date'>{{resourceData.approvalDate}}</span>
       </li>
-      <li style="list-style: none">
-        <span class='text-muted'>Uploader:</span> <span>{{resourceData.uploaderName}} ({{resourceData.uploaderEmail}})</span>
+      <li style="list-style: none" class='resource-upload-name-item'>
+        <span class='text-muted resource-header-inline'>Uploader:</span> <span class='resource-upload-name'>{{resourceData.uploaderName}} ({{resourceData.uploaderEmail}})</span>
       </li>
 
     </div>
     <div class='col-xs-6'>
 
     <h5>File Properties</h5>
-    <li style="list-style: none">
-      <span class='text-muted'>Type:</span> <span>{{resourceData.fileDescription}}</span>  <i>({{resourceData.mimetype}})</i>
+    <li style="list-style: none" class='resource-file-description-item'>
+      <span class='text-muted resource-header-inline'>Type:</span>
+      <span class='resource-file-description'>{{resourceData.fileDescription}}</span>
+      <i class='resource-file-mimetype'>({{resourceData.mimetype}})</i>
     </li>
-    <li style="list-style: none">
-      <span class='text-muted'>Name:</span> <span>{{resourceData.fileReference}}</span>
+    <li style="list-style: none" class='resource-file-reference-item'>
+      <span class='text-muted resource-header-inline'>Name:</span>
+      <a href="http://cartlabserver.shc.wisc.edu:8080/{{resourceData.fileReference}}" class='resource-file-link'>
+        Link <span class='glyphicon-glyphicon-link resource-file-link-glyph'
+      </a>
     </li>
-    <li style="list-style: none">
-      <span class='text-muted'>Size:</span> <span>{{resourceData.fileSize}}</span>
-    </li style="list-style: none">
+    <li style="list-style: none" class='resource-file-size-item'>
+      <span class='text-muted resource-header-inline'>Size:</span>
+      <span class='resource-file-size'>{{resourceData.fileSize}}</span>
+    </li>
 
   </div>
     <div id='theFrame'>
+      <h5 class='resource-header resource-resource-header'>Resource Preview</h5>
       {{#if resourceData.link}}
-      <iframe src='{{resourceData.link}}' height='100%' width='100%' ></iframe>
+      <iframe class='reference-i-frame' src='{{resourceData.link}}' height='100%' width='100%' ></iframe>
       {{else}}
-      <embed id='theFile' class='img-responsive' src='http://cartlabserver.shc.wisc.edu:8080{{resourceData.fileReference}}'>
+      <embed id='theFile' class='img-responsive reference-embed'
+      src='http://cartlabserver.shc.wisc.edu:8080{{resourceData.fileReference}}'>
       {{/if}}
     </div>
   </div>
   <script>
-    //init tooltips
-
     </script>
   </body>
 </html>

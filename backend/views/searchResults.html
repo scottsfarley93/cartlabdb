@@ -16,37 +16,37 @@
     </a> -->
   </div>
   <div class='media-body'>
-    <span class='small text-muted' id='date'>{{this.resourceCreationDate}}</span>
-    <h4 class='media-heading'><a href='project.html?id={{this.resourceID}}'>{{this.resourceTitle}}</a></h4>
-    <strong><i class='link text-muted'><a href="{{this.link}}">{{this.link}}</a></i></strong>
+    <span class='small text-muted sr-resource-date' id='date'>{{this.resourceCreationDate}}</span>
+    <h4 class='media-heading sr-resource-title'><a href='project.html?id={{this.resourceID}}'>{{this.resourceTitle}}</a></h4>
+    <strong><i class='link text-muted sr-resource-link'><a href="{{this.link}}">{{this.link}}</a></i></strong>
     <p>
       {{#each this.authors}}
-        <span class='text-muted'> <a href="search.html?q={{this.last}}">{{this.last}}, {{this.first}} {{this.middle}}</a></span><span>
+        <span class='text-muted sr-resource-author'> <a href="search.html?q={{this.last}}">{{this.last}}, {{this.first}} {{this.middle}}</a></span><span>
           &middot;</span>
       {{else}}
-        <span class='text-muted'>No Author Listed</span>
+        <span class='text-muted sr-resource-author sr-resource-no-author'>No Author Listed</span>
       {{/each}}
     </p>
     {{#if this.resourceDescription}}
       <p>
-        <strong>Description:</strong>
-        <span>{{this.resourceDescription}}</span>
+        <strong class='sr-description-header'>Description:</strong>
+        <span class='sr-description'>{{this.resourceDescription}}</span>
       </p>
     {{/if}}
     <p>
-      <strong>Category: </strong><a href='search.html?q={{this.resourceCategory}}'>{{this.resourceCategory}}</a>
+      <strong class='sr-category'>Category: </strong><a href='search.html?q={{this.resourceCategory}}'>{{this.resourceCategory}}</a>
     </p>
     <p>
-      <span class='strong'>Tags: </span>
+      <span class='strong sr-tags-header'>Tags: </span>
       {{#each this.tags}}
-        <span ><a style="text-decoration: underline" href="search.html?q={{this}}">{{this}}</a></span>
+        <span class='sr-tag'><a style="text-decoration: underline" href="search.html?q={{this}}">{{this}}</a></span>
       {{/each}}
     </p>
     {{#if this.references}}
     <div>
-      <h6>References</h6>
+      <h6 class='sr-reference-header'>References</h6>
       {{#each this.references}}
-        <span>{{this.string}}</span>
+        <span class='sr-reference'>{{this.string}}</span>
       {{/each}}
     </div>
     {{/if}}

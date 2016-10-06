@@ -1193,6 +1193,8 @@ function parseObjectDBResponse(data){
         references : [],
         tags : []
       } //this is the base response, to which we add additional properties
+      parentpage = getParentPageLink(thisRow['categorytext'])
+
       //add the properties directly
       responses[thisID]['resourceID'] = thisID
       responses[thisID]['resourceTitle'] = thisRow['resourcetitle']
@@ -1209,6 +1211,7 @@ function parseObjectDBResponse(data){
       responses[thisID]['approvalDate'] = thisRow['modified'].toDateString()
       responses[thisID]['imgElement'] = "<img src='" +  thisRow['objectreference'] + "' />"
       responses[thisID]['link'] = thisRow['hyperlink']
+      responses[thisID]['parentpage'] = parentpage
     } //end new resource creation
     //if its not new, we can add authors, tags, and references
     //do this because it's a left join
@@ -1335,6 +1338,59 @@ function sortByKey(array, key) {
         var x = a[key]; var y = b[key];
         return ((x < y) ? -1 : ((x > y) ? 1 : 0));
     });
+}
+
+function getParentPageLink(categorytext){
+  //figure out the project page here.  maybe change in the future to dynamically load this page
+  parentpage = ""
+  switch (categorytext) {
+    case "project":
+      parentpage = "search.html?category=project"
+      break;
+    case "ed/370":
+      parentpage = "education.html?q=370"
+      break
+    case "ed/572":
+      parentpage = "education.html?q=572"
+      break
+    case "ed/575":
+      parentpage = "education.html?q=575"
+      break
+    case "ed/970":
+      parentpage = "education.html?q=970"
+      break
+    case "news/blog":
+      parentpage = "search.html?q=blog"
+      break
+    case "research/paper":
+      parentpage = "research.html?q=paper"
+      break
+    case "research/poster":
+      parentpage = "research.html?q=poster"
+      break
+    case "research/slides":
+      parentpage = "research.html?q=slides"
+      break
+    case "design/map":
+      parentpage = "design.html?q=map"
+      break
+    case "design/docuent":
+      parentpage = "design.html?q=document"
+      break
+    case "design/image":
+      parentpage = "design.html?q=image"
+      break
+    case "design/data":
+      parentpage = "design.html?q=data"
+      break
+    case "uncategorized":
+      parentpage = "search.html?category=uncategorized"
+      break
+    default:
+      parentpage = "search.html?category=uncategorized"
+      break
+  }
+  return(parentpage)
 }
 
 app.listen(PORT); //start the server and make it listen for incoming client requests.

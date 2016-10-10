@@ -167,6 +167,9 @@ app.post('/upload', function(req, res){
   form.on('field', function(name, value){
     //put the file metadata into the database
     if (name == 'metadata'){
+      console.log("-----------------")
+      console.log("Parsing metadata")
+      console.log("-----------------")
       metadata = JSON.parse(value)
       //create the resource first
       resourceName = metadata['resourceName']

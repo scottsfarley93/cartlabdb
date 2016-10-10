@@ -183,15 +183,16 @@ app.post('/upload', function(req, res){
       references = metadata['references']
       uploaderName = metadata['uploader']['name']
       uploaderEmail = metadata['uploader']['email']
+      typeofresource = metadata['typeOfResource']
       link = metadata['link']
       //automatically approve this resource if the user is logged in as admin
       //otherwise, put it into embargo
       autoAuth = !req.session.admin  //admin will be true, so flip so embargo is off
-      vals = [resourceID, resourceName, resourceDate, resourceCategory.toLowerCase(), resourceDescription, notes, autoAuth, null, resourceFilename,  resourceFileType, resourceSize, uploaderName, uploaderEmail, link]
+      vals = [resourceID, resourceName, resourceDate, resourceCategory.toLowerCase(), resourceDescription, notes, autoAuth, null, resourceFilename,  resourceFileType, resourceSize, uploaderName, uploaderEmail, link, typeofresource]
       //get the category for this
 
                                           //databaseID/resourceID/resourceName/resourceDate/category/                     description/notes/embargo/auth/path/type/size/name/email/modified
-      db.one("INSERT INTO Resources Values(default, $1, $2, $3, (select categoryid from categories where lower(categorytext) = $4), $5, $6, $7, $8, $9, (select mediaTypeID from MediaTypes where lower(mimetype) = $10), $11, $12, $13, FALSE, default, $14) returning resourceid;", vals)
+      db.one("INSERT INTO Resources Values(default, $1, $2, $3, (select categoryid from categories where lower(categorytext) = $4), $5, $6, $7, $8, $9, (select mediaTypeID from MediaTypes where lower(mimetype) = $10), $11, $12, $13, FALSE, default, $14, $15) returning resourceid;", vals)
       .then(function(data){
           //now add authorships
           //these are a many-to-one table, hence this structure
@@ -1193,7 +1194,7 @@ function parseObjectDBResponse(data){
         references : [],
         tags : []
       } //this is the base response, to which we add additional properties
-      parentpage = getParentPageLink(thisRow['categorytext'])
+      // parentpage = getParentPageLink(thisRow['categorytext'])
 
       //add the properties directly
       responses[thisID]['resourceID'] = thisID
@@ -1211,7 +1212,7 @@ function parseObjectDBResponse(data){
       responses[thisID]['approvalDate'] = thisRow['modified'].toDateString()
       responses[thisID]['imgElement'] = "<img src='" +  thisRow['objectreference'] + "' />"
       responses[thisID]['link'] = thisRow['hyperlink']
-      responses[thisID]['parentpage'] = parentpage
+      responses[thisID]['parentpage'] = "/research.html?=poster"
     } //end new resource creation
     //if its not new, we can add authors, tags, and references
     //do this because it's a left join

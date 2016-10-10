@@ -154,6 +154,7 @@ const PORT=conf.application.servePort;
 app.post('/upload', function(req, res){
   //create new database object for using in this transaction
   db = createConnection()
+  console.log(req)
   // create an incoming form object
   var form = new formidable.IncomingForm();
   // specify that we want to allow the user to upload multiple files in a single request

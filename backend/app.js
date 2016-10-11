@@ -1069,6 +1069,7 @@ app.get("/search/:id", function(req, res){
         res.render('resourcePage', localvars)
       })
       .catch(function(err){
+        console.log(err)
         res.render('error', {error: err})
       })
 

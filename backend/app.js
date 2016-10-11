@@ -855,7 +855,7 @@ app.get("/search", function(req, res){
           authorship.authormiddle, tags.tagtext, objectreferences.referenceid, objectreferences.authors, \
           objectreferences.title, objectreferences.journal, objectreferences.place, objectreferences.volume, \
           objectreferences.issue, objectreferences.pages, objectreferences.pubyear, objectreferences.publisher, \
-          objectreferences.doi, objectreferences.typeofreference, objectreferences.rawref, mediatypes.mimetype, mediatypes.description, resources.hyperlink \
+          objectreferences.doi, objectreferences.typeofreference, objectreferences.rawref, mediatypes.mimetype, mediatypes.description, resources.hyperlink, resources.typeofresource \
           FROM (SELECT DENSE_RANK() OVER (ORDER BY resources.resourceid) AS dr, resources.*\
              FROM resources) resources  \
       	LEFT OUTER JOIN Authorship on Authorship.resourceid = resources.resourceid \
@@ -1043,7 +1043,7 @@ app.get("/search/:id", function(req, res){
           authorship.authorfirst, authorship.authormiddle, authorship.authorlast, authorship.authorshipid,\
            mediatypes.description, mediatypes.mimetype, tags.tagtext, objectreferences.title, objectreferences.journal, \
            objectreferences.authors, objectreferences.issue, objectreferences.pages, objectreferences.publisher, \
-           objectreferences.doi, objectreferences.referenceid, resources.modified, resources.resourcedate,  resources.hyperlink, resources.resourcetype, \
+           objectreferences.doi, objectreferences.referenceid, resources.modified, resources.resourcedate,  resources.hyperlink, resources.typeofresource, \
            objectreferences.rawref\
           FROM (SELECT DENSE_RANK() OVER (ORDER BY resources.resourceid) AS dr, resources.*\
              FROM resources) resources  \
@@ -1217,6 +1217,7 @@ function parseObjectDBResponse(data){
       responses[thisID]['approvalDate'] = thisRow['modified'].toDateString()
       responses[thisID]['imgElement'] = "<img src='" +  thisRow['objectreference'] + "' />"
       responses[thisID]['link'] = thisRow['hyperlink']
+      responses[thisID]['typeOfResource'] = thisRow['typeofresource']
     } //end new resource creation
     //if its not new, we can add authors, tags, and references
     //do this because it's a left join

@@ -1043,7 +1043,7 @@ app.get("/search/:id", function(req, res){
           authorship.authorfirst, authorship.authormiddle, authorship.authorlast, authorship.authorshipid,\
            mediatypes.description, mediatypes.mimetype, tags.tagtext, objectreferences.title, objectreferences.journal, \
            objectreferences.authors, objectreferences.issue, objectreferences.pages, objectreferences.publisher, \
-           objectreferences.doi, objectreferences.referenceid, resources.modified, resources.resourcedate,  resources.hyperlink, \
+           objectreferences.doi, objectreferences.referenceid, resources.modified, resources.resourcedate,  resources.hyperlink, resources.resourcetype, \
            objectreferences.rawref\
           FROM (SELECT DENSE_RANK() OVER (ORDER BY resources.resourceid) AS dr, resources.*\
              FROM resources) resources  \
@@ -1216,7 +1216,6 @@ function parseObjectDBResponse(data){
       responses[thisID]['approvalDate'] = thisRow['modified'].toDateString()
       responses[thisID]['imgElement'] = "<img src='" +  thisRow['objectreference'] + "' />"
       responses[thisID]['link'] = thisRow['hyperlink']
-      responses[thisID]['parentpage'] = "/research.html?=poster"
     } //end new resource creation
     //if its not new, we can add authors, tags, and references
     //do this because it's a left join

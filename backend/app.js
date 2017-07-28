@@ -22,13 +22,6 @@ var FileStore = require('session-file-store')(session) //session storage
 var uuid = require('node-uuid'); //generates IDs for things like sessions
 var bodyParser = require('body-parser'); //parse the request body
 var cookieParser = require('cookie-parser');
-var privateKey  = fs.readFileSync('/etc/ssl/certs/cartlabserver.shc.wisc.edu.key', 'utf8');
-var certificate = fs.readFileSync('/etc/ssl/certs/cartlabserver_shc_wisc_edu_cert.cer', 'utf8');
-
-var credentials = {
-  key: privateKey,
-  cert: certificate
-};
 
 var app = express() //use the express framework for routing
 var hbs = require('hbs');
@@ -38,7 +31,7 @@ var nodemailer = require('nodemailer');
 
 //read the file with hostname etc
 var conf = JSON.parse(fs.readFileSync('conf.js', 'utf8'))
-console.log(conf)
+// console.log(conf)
 //should we email the approvers every time something is uploaded?
 const alertAuthUsers = false;
 
@@ -152,9 +145,6 @@ app.use(function(req, res, next) {
 
 //this will allow us to differentiate between GET, POST, etc
 var router = express.Router();
-
-//Serve on this port
-const PORT=conf.application.servePort;
 
 
 /////////////////////////////////////////////
@@ -1406,12 +1396,18 @@ function getParentPageLink(categorytext){
       break
   }
   return(parentpage)
-}
+};
+
+var privateKey  = fs.readFileSync(conf.application.httpsKey, 'utf8');
+var certificate = fs.readFileSync(conf.application.httpsCert, 'utf8');
+
+var credentials = {
+  key: privateKey,
+  cert: certificate
+};
 
 var httpServer = http.createServer(app);
 var httpsServer = https.createServer(credentials, app);
 
-httpServer.listen(8080);
-httpsServer.listen(8443);
-
-// app.listen(PORT); //start the server and make it listen for incoming client requests.
+httpServer.listen(conf.application.servePort); //serve on http
+httpsServer.listen(conf.application.httpsPort); //serve on https

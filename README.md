@@ -24,7 +24,10 @@
     "password" : "email password"
   },
   "application": {
-    "servePort" : 8080,
+    "servePort" : 0000,
+    "httpsPort" : 0000,
+    "httpsKey" : "path_to_ssl_key",
+    "httpsCert" : "path_to_ssl_certificate",
     "URI": "the uri to serve on"
   },
   "cookieKey" : "key"

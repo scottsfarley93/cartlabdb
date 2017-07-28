@@ -1,6 +1,7 @@
 //Module imports
 console.log("Starting up...")
 var http = require('http'); //basic HTTP commands
+var https = require('https'); //HTTPS
 var express = require("express"); //express application framework
 var dispatcher = require('httpdispatcher'); //routing
 var formidable = require('formidable'); //form data digestion
@@ -8,6 +9,7 @@ var path = require('path'); //filesystem
 var pg = require('pg'); //postgres
 var util = require('util');
 var fs = require('fs'); //filesystem
+var tls = require('tls'); //TLS
 var promise = require('bluebird'); //promise library for pgp to run on
 var pgp = require('pg-promise')( //postgres promise library makes it easier to execute user queries
   {promiseLib: promise}
@@ -19,7 +21,14 @@ var session = require('express-session'); //sessions management for express
 var FileStore = require('session-file-store')(session) //session storage
 var uuid = require('node-uuid'); //generates IDs for things like sessions
 var bodyParser = require('body-parser'); //parse the request body
-var cookieParser = require('cookie-parser')
+var cookieParser = require('cookie-parser');
+var privateKey  = fs.readFileSync('/etc/ssl/certs/cartlabserver.shc.wisc.edu.key', 'utf8');
+var certificate = fs.readFileSync('/etc/ssl/certs/cartlabserver_shc_wisc_edu_cert.cer', 'utf8');
+
+var credentials = {
+  key: privateKey,
+  cert: certificate
+};
 
 var app = express() //use the express framework for routing
 var hbs = require('hbs');
@@ -1399,4 +1408,10 @@ function getParentPageLink(categorytext){
   return(parentpage)
 }
 
-app.listen(PORT); //start the server and make it listen for incoming client requests.
+var httpServer = http.createServer(app);
+var httpsServer = https.createServer(credentials, app);
+
+httpServer.listen(8080);
+httpsServer.listen(8443);
+
+// app.listen(PORT); //start the server and make it listen for incoming client requests.

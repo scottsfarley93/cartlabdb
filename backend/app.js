@@ -449,7 +449,7 @@ app.get("/mediaTypes", function(req, res){
 app.get("/categories", function(req, res){
   //get a list of the categories for objects in the database
   db = createConnection()
-  db.any("SELECT categorytext FROM categories;")
+  db.any("SELECT categoryid, categorytext FROM categories;")
     .then(function(data){
       res.status(200).json({success: true, data:data});
     })
